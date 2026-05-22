@@ -64,10 +64,10 @@ const { canvasRef: graphCanvasRef } = useGraph(() => telemetry.value)
       <div class="grid auto-rows-auto gap-4">
         <div class="flex items-center gap-6 p-5 max-[700px]:flex-col max-[700px]:items-stretch" :class="[card]">
           <div class="relative size-[200px] shrink-0 max-[700px]:size-[140px]">
-            <svg class="size-full rotate-[135deg]" viewBox="0 0 200 200">
+            <svg class="size-full rotate-135" viewBox="0 0 200 200">
               <circle class="fill-none stroke-tcu-bg-3" cx="100" cy="100" r="85" stroke-width="12" stroke-dasharray="400 535" />
               <circle
-                class="fill-none stroke-[length:var(--dash)] transition-[stroke] duration-75"
+                class="fill-none stroke-(length:--dash) transition-[stroke] duration-75"
                 cx="100"
                 cy="100"
                 r="85"
