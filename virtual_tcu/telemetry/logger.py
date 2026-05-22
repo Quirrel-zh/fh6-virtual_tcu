@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Deque, Optional
 
 from virtual_tcu.config.constants import Cfg
+from virtual_tcu import paths
 
 LOG_MAGIC = b"TCULOG01"
 
@@ -49,9 +50,8 @@ class TelemetryLogger:
             self.stop()
         if mode not in ("events", "all"):
             return False
-        Path(Cfg.LOG_DIR).mkdir(exist_ok=True)
         ts = time.strftime("%Y%m%d_%H%M%S")
-        path = Path(Cfg.LOG_DIR) / f"{Cfg.LOG_FILE_PREFIX}_{ts}.bin.gz"
+        path = paths.log_dir() / f"{Cfg.LOG_FILE_PREFIX}_{ts}.bin.gz"
         with self._lock:
             try:
                 gz = gzip.open(path, "wb", compresslevel=6)

@@ -1,12 +1,13 @@
 import json
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional, Union
 
-from virtual_tcu.config.constants import Cfg, DEFAULTS
+from virtual_tcu.config.constants import DEFAULTS
+from virtual_tcu import paths
 
 class ConfigStore:
-    def __init__(self, path: str = Cfg.CONFIG_FILE):
-        self.path = Path(path)
+    def __init__(self, path: Optional[Union[str, Path]] = None):
+        self.path = Path(path) if path is not None else paths.config_file()
         self.data: Dict[str, float | bool] = dict(DEFAULTS)
         self.load()
 
@@ -50,6 +51,7 @@ class ConfigStore:
 
     def save(self):
         try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
             self.path.write_text(json.dumps(self.data, indent=2))
         except Exception as e:
             print(f"[Config] save failed: {e}")

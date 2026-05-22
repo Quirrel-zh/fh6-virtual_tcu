@@ -2,10 +2,10 @@ import asyncio
 import sys
 import time
 import webbrowser
-from pathlib import Path
 
 import keyboard
 
+from virtual_tcu import paths
 from virtual_tcu.config.constants import Cfg
 from virtual_tcu.config.store import ConfigStore
 from virtual_tcu.deps import AIOHTTP_OK
@@ -38,7 +38,7 @@ async def main_async(receiver, tcu, config, logger):
     url = f"http://{Cfg.WEB_HOST}:{Cfg.WEB_PORT}"
     print(f"  [OK] Web UI at {url}")
     await asyncio.sleep(0.5)
-    marker = Path(".tcu_last_run")
+    marker = paths.last_run_marker()
     should_open = True
     if marker.exists():
         try:
@@ -119,13 +119,13 @@ def main():
     banner()
 
     config = ConfigStore()
-    print(f"  [OK] Config: {Cfg.CONFIG_FILE}")
+    print(f"  [OK] Config: {config.path}")
 
     profiles = ProfileStore()
-    print(f"  [OK] Profiles: {len(profiles.data)} cars loaded")
+    print(f"  [OK] Profiles: {len(profiles.data)} cars loaded ({profiles.path})")
 
     logger = TelemetryLogger()
-    print(f"  [OK] Logger ready (logs/)")
+    print(f"  [OK] Logger ready ({paths.log_dir()})")
 
     receiver = TelemetryReceiver(logger)
     if not receiver.start():

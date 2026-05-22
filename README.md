@@ -30,6 +30,20 @@ After launch, open **http://127.0.0.1:8765** in your browser for the live dashbo
 | Item | Requirement |
 |------|-------------|
 | OS | **Windows 10 / 11** only |
+
+### Option A — Download release (no Python / Node)
+
+1. Open **[GitHub Releases](https://github.com/Quirrel-zh/fh6-virtual_tcu/releases)** and download the latest `VirtualTCU-*-win64.zip`.
+2. Extract anywhere (e.g. `C:\Games\VirtualTCU\`).
+3. Run **`VirtualTCU.exe`** as **Administrator** (required for global key injection).
+4. Open **http://127.0.0.1:8765** in your browser.
+
+Settings, profiles, and logs are stored under **`%APPDATA%\VirtualTCU\`** (`tcu_config.json`, `tcu_profiles.json`, `logs\`).
+
+### Option B — Run from source (developers)
+
+| Item | Requirement |
+|------|-------------|
 | Python | **3.10+** — [Download](https://www.python.org/downloads/) — check **Add Python to PATH** during install |
 | Node.js | Only needed to develop or rebuild the Web UI (18+ recommended) |
 
@@ -79,7 +93,11 @@ pip install -r requirements.txt
 
 ## How to Run
 
-### Daily use
+### Release build (recommended for players)
+
+See **Option A** under [Requirements](#requirements). No install step — extract the zip and run `VirtualTCU.exe` as Administrator.
+
+### From source (developers)
 
 1. Open Command Prompt as **Administrator** (recommended for reliable shift injection).
 2. Go to the project folder and start:
@@ -97,9 +115,7 @@ pip install -r requirements.txt
 
 ### First run or after frontend changes
 
-If `virtual_tcu/web/dist/` is already in the repo, you only need Python.
-
-To build the Web UI yourself:
+Build the Web UI before running (or use a GitHub Release zip that already includes `dist/`):
 
 ```bash
 cd web-ui
@@ -107,7 +123,7 @@ npm install
 npm run build
 ```
 
-Output goes to `virtual_tcu/web/dist/`. Without a build, the backend falls back to the legacy embedded `index.html`.
+Output goes to `virtual_tcu/web/dist/`. Without a build, the backend serves HTTP **503** with instructions instead of the dashboard.
 
 Frontend development: see [web-ui/README.md](web-ui/README.md).
 
@@ -139,9 +155,9 @@ virtualTCU/
 │   ├── web/                # Web server + dist assets
 │   └── ...
 ├── web-ui/                 # Vue 3 + Tailwind v4 frontend
-├── tcu_config.json         # tunables (auto-created on first run)
-├── tcu_profiles.json       # per-car profiles
-└── logs/                   # optional telemetry replay logs
+├── tcu_config.json         # tunables (dev: project cwd; release: %APPDATA%\VirtualTCU)
+├── tcu_profiles.json       # per-car profiles (same locations as config)
+└── logs/                   # optional telemetry replay logs (dev cwd / release APPDATA)
 ```
 
 ---

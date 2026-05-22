@@ -30,6 +30,20 @@
 | 项目 | 要求 |
 |------|------|
 | 操作系统 | **Windows 10 / 11**（仅支持 Windows） |
+
+### 方式 A — 下载 Release（无需 Python / Node）
+
+1. 打开 **[GitHub Releases](https://github.com/Quirrel-zh/fh6-virtual_tcu/releases)**，下载最新的 `VirtualTCU-*-win64.zip`。
+2. 解压到任意目录（例如 `C:\Games\VirtualTCU\`）。
+3. 以**管理员**身份运行 **`VirtualTCU.exe`**（全局按键注入需要管理员权限）。
+4. 在浏览器打开 **http://127.0.0.1:8765**。
+
+配置、档案与日志保存在 **`%APPDATA%\VirtualTCU\`**（`tcu_config.json`、`tcu_profiles.json`、`logs\`）。
+
+### 方式 B — 从源码运行（开发者）
+
+| 项目 | 要求 |
+|------|------|
 | Python | **3.10+** — [下载](https://www.python.org/downloads/)，安装时勾选 **Add Python to PATH** |
 | Node.js | 仅在前端开发或重新构建 Web UI 时需要（建议 18+） |
 
@@ -79,7 +93,11 @@ pip install -r requirements.txt
 
 ## 运行
 
-### 日常使用
+### Release 版本（玩家推荐）
+
+见上方 [系统要求](#系统要求) 中的**方式 A**。无需安装依赖，解压后以管理员运行 `VirtualTCU.exe` 即可。
+
+### 从源码运行（开发者）
 
 1. 以**管理员**身份打开命令提示符（推荐，确保换挡注入可靠）。
 2. 进入项目目录并启动：
@@ -97,9 +115,7 @@ pip install -r requirements.txt
 
 ### 首次使用或更新前端后
 
-若仓库中已有 `virtual_tcu/web/dist/`，可直接运行 Python，无需 Node。
-
-需要自行构建 Web UI 时：
+运行前先构建 Web UI（或使用已包含 `dist/` 的 GitHub Release 压缩包）：
 
 ```bash
 cd web-ui
@@ -107,7 +123,7 @@ npm install
 npm run build
 ```
 
-构建产物输出到 `virtual_tcu/web/dist/`。未构建时，后端会回退到旧版内嵌 `index.html`。
+构建产物输出到 `virtual_tcu/web/dist/`。未构建时，后端在 `/` 返回 HTTP **503** 提示页，而非仪表盘。
 
 前端开发说明见 [web-ui/README.md](web-ui/README.md)。
 
@@ -139,9 +155,9 @@ virtualTCU/
 │   ├── web/                # Web 服务与 dist 静态资源
 │   └── ...
 ├── web-ui/                 # Vue 3 + Tailwind v4 前端
-├── tcu_config.json         # 运行时可调参数（首次运行自动生成）
-├── tcu_profiles.json       # 每车配置存档
-└── logs/                   # 遥测回放日志（可选）
+├── tcu_config.json         # 运行时可调参数（开发：项目目录；Release：%APPDATA%\VirtualTCU）
+├── tcu_profiles.json       # 每车配置存档（与 config 同路径规则）
+└── logs/                   # 遥测回放日志（开发目录 / Release 为 APPDATA）
 ```
 
 ---

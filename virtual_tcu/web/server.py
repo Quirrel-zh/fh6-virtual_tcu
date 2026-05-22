@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 from typing import Optional, Set
 
+from virtual_tcu import paths
 from virtual_tcu.config.constants import Cfg, DEFAULTS
 from virtual_tcu.config.store import ConfigStore
 from virtual_tcu.deps import AIOHTTP_OK, WSMsgType, web
@@ -11,17 +12,39 @@ from virtual_tcu.logic.tcu import TCULogic
 from virtual_tcu.telemetry.logger import TelemetryLogger
 from virtual_tcu.telemetry.receiver import TelemetryReceiver
 
-_DIST_DIR = Path(__file__).with_name("dist")
-_LEGACY_INDEX = Path(__file__).with_name("index.html")
+_NO_UI_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual TCU — Web UI unavailable</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.5; color: #1a1a1a; }
+    h1 { font-size: 1.35rem; }
+    code { background: #f0f0f0; padding: 0.1em 0.35em; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Web UI unavailable</h1>
+  <p>Dashboard assets were not found. The TCU core may still run; only the browser UI is missing.</p>
+  <p><strong>Developers:</strong> build the frontend with <code>cd web-ui &amp;&amp; npm install &amp;&amp; npm run build</code>.</p>
+  <p><strong>Users:</strong> download the latest Windows release from GitHub — it includes a pre-built UI.</p>
+  <hr>
+  <p lang="zh-CN">Web 仪表盘资源未找到。TCU 核心可能仍在运行，但浏览器界面不可用。</p>
+  <p lang="zh-CN"><strong>开发者：</strong>执行 <code>cd web-ui &amp;&amp; npm install &amp;&amp; npm run build</code> 构建前端。</p>
+  <p lang="zh-CN"><strong>用户：</strong>请从 GitHub Releases 下载包含预构建 UI 的 Windows 版本。</p>
+</body>
+</html>
+"""
 
 
 def _dist_index() -> Optional[Path]:
-    p = _DIST_DIR / "index.html"
+    p = paths.web_dist_dir() / "index.html"
     return p if p.is_file() else None
 
 
 def _dist_assets_dir() -> Optional[Path]:
-    p = _DIST_DIR / "assets"
+    p = paths.web_dist_dir() / "assets"
     return p if p.is_dir() else None
 
 
@@ -38,15 +61,16 @@ class WebServer:
         self._config = config
         self._logger = logger
         self._clients: Set = set()
-        self._ui_mode = "dist" if _dist_index() else "legacy"
+        self._ui_available = _dist_index() is not None
 
     async def index(self, request):
         dist = _dist_index()
         if dist is not None:
             return web.FileResponse(dist)
         return web.Response(
-            text=_LEGACY_INDEX.read_text(encoding="utf-8"),
-            content_type="text/html",
+            text=_NO_UI_HTML,
+            content_type="text/html; charset=utf-8",
+            status=503,
         )
 
     async def websocket_handler(self, request):
@@ -186,6 +210,8 @@ class WebServer:
         await runner.setup()
         site = web.TCPSite(runner, Cfg.WEB_HOST, Cfg.WEB_PORT)
         await site.start()
-        ui = f"Vue dist ({_DIST_DIR})" if self._ui_mode == "dist" else "legacy index.html"
-        print(f"  [OK] Web UI ({ui})")
+        if self._ui_available:
+            print(f"  [OK] Web UI (dist: {paths.web_dist_dir()})")
+        else:
+            print(f"  [!] Web UI assets missing ({paths.web_dist_dir()}) — HTTP 503 on /")
         asyncio.create_task(self.broadcast_loop())
