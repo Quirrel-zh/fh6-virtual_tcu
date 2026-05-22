@@ -10,6 +10,160 @@ After launch, open **http://127.0.0.1:8765** in your browser for the live dashbo
 
 ---
 
+## Quick start
+
+| I want to… | Use |
+|------------|-----|
+| Play — no Python / Node install | [Download & use (Release)](#download--use-release) |
+| Develop or run from this repo | [Run from source](#run-from-source) |
+| Change the Vue UI | [web-ui/README.md](web-ui/README.md) |
+
+**Platform:** Windows 10 / 11 only. Run as **Administrator** (required for global key injection).
+
+---
+
+## Download & use (Release)
+
+### 1. Download
+
+Open **[GitHub Releases](https://github.com/Quirrel-zh/fh6-virtual_tcu/releases)** and download the latest `VirtualTCU-*-win64.zip`.
+
+### 2. Extract
+
+Extract the **entire** zip to any folder (e.g. `C:\Games\VirtualTCU\`). Do **not** run the exe from inside the zip preview.
+
+```
+VirtualTCU-12.0.x-win64/
+├── Launch VirtualTCU.bat    ← optional launcher (recommended)
+└── VirtualTCU/
+    ├── VirtualTCU.exe
+    └── _internal/           ← required; do not delete or move exe alone
+```
+
+### 3. Start
+
+Right-click **`Launch VirtualTCU.bat`** or **`VirtualTCU\VirtualTCU.exe`** → **Run as administrator**.
+
+A console window opens. The browser may auto-open **http://127.0.0.1:8765**; if not, open it manually.
+
+### 4. Play
+
+Configure FH6 once ([in-game setup](#forza-horizon-6--in-game-setup-one-time)), start a race, and the dashboard should go **live** when telemetry arrives.
+
+### 5. Quit
+
+Focus the **console window** and press **`Ctrl + C`**, then close the window.  
+(**Do not** use **Q** — that is the in-game downshift key.)
+
+### Where Release data is stored
+
+Release builds save all user data under **`%APPDATA%\VirtualTCU\`**, **not** next to the exe.
+
+| Item | Path |
+|------|------|
+| Settings | `%APPDATA%\VirtualTCU\tcu_config.json` |
+| Per-car profiles | `%APPDATA%\VirtualTCU\tcu_profiles.json` |
+| Telemetry replay logs | `%APPDATA%\VirtualTCU\logs\` |
+| Crash log (if startup fails) | `%APPDATA%\VirtualTCU\crash.log` |
+
+Quick open logs folder: `Win + R` → type `%APPDATA%\VirtualTCU\logs`
+
+### Telemetry recording (sidebar)
+
+1. In the Web UI sidebar, click **Start logging (events)** or **Start logging (all)**.
+2. Drive in FH6 (must be in a race with Data Out enabled).
+3. Click **Stop** when done — the file is finalized on stop.
+
+| Mode | What it records |
+|------|-----------------|
+| **Events** | Shift moments + short buffer (~0.5 MB typical) |
+| **All** | Every telemetry packet while recording (up to 10 MB auto-stop) |
+
+Files are named `tcu_replay_YYYYMMDD_HHMMSS.bin.gz` (gzip binary replay, not plain `.log`).
+
+---
+
+## Run from source
+
+For developers or anyone running from a git clone.
+
+### Prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Python | 3.10+ | [Download](https://www.python.org/downloads/) — check **Add Python to PATH** |
+| Node.js | 18+ | Only for building / editing the Web UI |
+
+### One-time setup
+
+Open **Administrator** Command Prompt or PowerShell:
+
+```bash
+cd path\to\virtualTCU
+pip install -r requirements.txt
+```
+
+```bash
+cd web-ui
+npm install
+npm run build
+cd ..
+```
+
+`npm run build` writes the dashboard to `virtual_tcu/web/dist/`. Without it, the backend returns HTTP **503** instead of the UI.
+
+### Start the backend
+
+```bash
+cd path\to\virtualTCU
+python -m virtual_tcu
+```
+
+(`python virtual_tcu.py` also works.)
+
+Open **http://127.0.0.1:8765**, launch FH6, enter a race. Quit with **`Ctrl + C`** in the terminal.
+
+### Where source-run data is stored
+
+When running from source, config / profiles / logs use the **project directory** (current working directory):
+
+```
+virtualTCU/
+├── tcu_config.json
+├── tcu_profiles.json
+└── logs/
+    └── tcu_replay_*.bin.gz
+```
+
+### Frontend dev (optional)
+
+Terminal 1 — backend:
+
+```bash
+python -m virtual_tcu
+```
+
+Terminal 2 — Vite hot reload:
+
+```bash
+cd web-ui
+npm run dev
+```
+
+Open **http://127.0.0.1:5173** (proxies WebSocket to port 8765). See [web-ui/README.md](web-ui/README.md).
+
+### Build a Release zip locally (maintainers)
+
+```bash
+cd web-ui && npm run build && cd ..
+pip install pyinstaller
+pyinstaller virtual_tcu.spec --noconfirm
+```
+
+Output: `dist/VirtualTCU/` — same layout as the GitHub Release. Push a `v*` tag to trigger CI.
+
+---
+
 ## Drive Modes
 
 | Mode | Behavior |
@@ -21,29 +175,7 @@ After launch, open **http://127.0.0.1:8765** in your browser for the live dashbo
 | **OFFROAD** | Tuned for low grip and uneven terrain |
 | **MANUAL** | TCU disabled — you shift yourself |
 
-**F9** (global hotkey, works while Forza is in focus) cycles through modes. Hotkeys can be changed in the Web UI settings.
-
----
-
-## Requirements
-
-| Item | Requirement |
-|------|-------------|
-| OS | **Windows 10 / 11** only |
-| Python | **3.10+** — [Download](https://www.python.org/downloads/) — check **Add Python to PATH** during install |
-| Node.js | Only needed to develop or rebuild the Web UI (18+ recommended) |
-
-### Install Python dependencies
-
-Run in an **Administrator** Command Prompt (`keyboard` needs elevated privileges for global key injection):
-
-```bash
-pip install -r requirements.txt
-```
-
-- `keyboard` — required (hotkeys + virtual key injection)
-- `aiohttp` — optional; without it the Web UI will not start (core TCU can still run headless)
-- `pypresence` — optional Discord Rich Presence
+**F9** (global hotkey, works while Forza is in focus) cycles through modes. **F8** toggles logging. Both can be changed in the Web UI settings.
 
 ---
 
@@ -77,42 +209,6 @@ pip install -r requirements.txt
 
 ---
 
-## How to Run
-
-### Daily use
-
-1. Open Command Prompt as **Administrator** (recommended for reliable shift injection).
-2. Go to the project folder and start:
-
-   ```bash
-   cd path\to\virtualTCU
-   python -m virtual_tcu
-   ```
-
-   Legacy entry point also works: `python virtual_tcu.py`
-
-3. Open **http://127.0.0.1:8765** in your browser.
-4. Launch FH6 and start a race — the dashboard goes live once telemetry is received.
-5. Press **Q** in the terminal window to quit.
-
-### First run or after frontend changes
-
-If `virtual_tcu/web/dist/` is already in the repo, you only need Python.
-
-To build the Web UI yourself:
-
-```bash
-cd web-ui
-npm install
-npm run build
-```
-
-Output goes to `virtual_tcu/web/dist/`. Without a build, the backend falls back to the legacy embedded `index.html`.
-
-Frontend development: see [web-ui/README.md](web-ui/README.md).
-
----
-
 ## Web Dashboard
 
 When connected, the browser shows:
@@ -122,63 +218,73 @@ When connected, the browser shows:
 - **TCU state** — cruising, kickdown, engine braking, etc.
 - **Turbo / engine** — boost (bar), power (kW), torque (Nm)
 - **Stats & shift history** — session data and learning progress
-- **Settings** — live tuning saved to `tcu_config.json`; per-car profile export/import
+- **Settings** — live tuning; per-car profile export/import
+- **Logger** — start/stop telemetry replay recording
 
 Switch UI language in the page header (English / 简体中文).
 
 ---
 
-## Project Layout (brief)
+## Project layout (brief)
 
 ```
 virtualTCU/
 ├── virtual_tcu.py          # entry → virtual_tcu.app
 ├── virtual_tcu/            # Python package
-│   ├── logic/tcu.py        # shift logic & drive modes
-│   ├── telemetry/          # FH6 UDP parser
-│   ├── web/                # Web server + dist assets
-│   └── ...
 ├── web-ui/                 # Vue 3 + Tailwind v4 frontend
-├── tcu_config.json         # tunables (auto-created on first run)
-├── tcu_profiles.json       # per-car profiles
-└── logs/                   # optional telemetry replay logs
+├── packaging/              # Launch VirtualTCU.bat (bundled in Release zip)
+├── virtual_tcu.spec        # PyInstaller spec
+└── .github/workflows/      # Release CI
 ```
 
 ---
 
 ## Troubleshooting
 
-### Dashboard shows offline / waiting for Forza
+### Release exe flashes and closes
 
-- Confirm **Data Out** is ON and port is **5555**.
-- You must be **in a race** (no telemetry in menus).
-- Restart Forza after changing Data Out settings.
+- Extract the **full** zip — exe needs `_internal/` beside it.
+- Close other TCU instances (`python -m virtual_tcu` or another `VirtualTCU.exe`) — ports **5555** / **8765** are single-use.
+- Run from cmd: `cd path\to\VirtualTCU` then `VirtualTCU.exe` (failed builds pause with an error).
+- Check **`%APPDATA%\VirtualTCU\crash.log`**.
 
-### TCU does not shift / shifts have no effect in-game
+### Recording started but no log file found
 
-- Verify Forza keyboard bindings: Shift Up = **E**, Shift Down = **Q**.
-- Run CMD as **Administrator**, then start `python -m virtual_tcu`.
+- Release logs go to **`%APPDATA%\VirtualTCU\logs\`**, not the exe folder.
+- Click **Stop** before looking — the gzip file is finalized on stop.
+- Use **All** mode and drive in a race with Data Out ON; **Events** mode only writes meaningful data around shifts.
+- Look for `tcu_replay_*.bin.gz`, not `.log`.
 
-### F9 does not change modes
+### Dashboard offline / waiting for Forza
 
-- Another app may have registered F9 (Discord overlay, MSI Afterburner, etc.). Close overlays and try again.
+- Data Out **ON**, port **5555**, **Car Dash** format.
+- Must be **in a race** (no telemetry in menus).
 
-### Wrong gear or speed shows 0
+### TCU does not shift
 
-- Calibrated for **FH6 Car Dash (324-byte)** packets only. Not compatible with FH5 or Forza Motorsport.
+- Forza keyboard: Shift Up = **E**, Shift Down = **Q**.
+- Run as **Administrator**.
+
+### F9 / F8 hotkeys do nothing
+
+- Close apps that may capture those keys (Discord overlay, MSI Afterburner, etc.).
+
+### Wrong gear or speed
+
+- FH6 **324-byte Car Dash** only — not FH5 or Forza Motorsport.
 
 ---
 
 ## Notes
 
-- Works with any FH6 car — max RPM comes from telemetry so shift points auto-calibrate per car.
+- Works with any FH6 car — shift points auto-calibrate from telemetry max RPM.
 - **Reverse protection** — no automatic shifts in reverse.
-- **Low-speed protection** — no automatic shifts below ~12 km/h to avoid jerky stops.
-- Only sends **E** / **Q** keyboard events; does not modify controller or other inputs.
+- **Low-speed protection** — no automatic shifts below ~12 km/h.
+- Only sends **E** / **Q** keyboard events; does not modify controller inputs.
 
 ---
 
-## Tested On
+## Tested on
 
 - Windows 11
 - Steam edition of Forza Horizon 6

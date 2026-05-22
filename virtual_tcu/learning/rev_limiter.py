@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Dict, Optional
+from typing import Deque, Dict, Optional
 
 from virtual_tcu.telemetry.model import Telemetry
 

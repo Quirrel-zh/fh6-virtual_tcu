@@ -2,6 +2,9 @@ import threading
 import time
 from typing import Set
 
+from virtual_tcu.telemetry.model import Telemetry
+
+
 class SessionStats:
     def __init__(self):
         self.start_time = time.time()

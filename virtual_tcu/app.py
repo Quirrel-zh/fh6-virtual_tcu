@@ -2,10 +2,10 @@ import asyncio
 import sys
 import time
 import webbrowser
-from pathlib import Path
 
 import keyboard
 
+from virtual_tcu import paths
 from virtual_tcu.config.constants import Cfg
 from virtual_tcu.config.store import ConfigStore
 from virtual_tcu.deps import AIOHTTP_OK
@@ -38,7 +38,7 @@ async def main_async(receiver, tcu, config, logger):
     url = f"http://{Cfg.WEB_HOST}:{Cfg.WEB_PORT}"
     print(f"  [OK] Web UI at {url}")
     await asyncio.sleep(0.5)
-    marker = Path(".tcu_last_run")
+    marker = paths.last_run_marker()
     should_open = True
     if marker.exists():
         try:
@@ -119,18 +119,22 @@ def main():
     banner()
 
     config = ConfigStore()
-    print(f"  [OK] Config: {Cfg.CONFIG_FILE}")
+    print(f"  [OK] Config: {config.path}")
 
     profiles = ProfileStore()
-    print(f"  [OK] Profiles: {len(profiles.data)} cars loaded")
+    print(f"  [OK] Profiles: {len(profiles.data)} cars loaded ({profiles.path})")
 
     logger = TelemetryLogger()
-    print(f"  [OK] Logger ready (logs/)")
+    print(f"  [OK] Logger ready ({paths.log_dir()})")
 
     receiver = TelemetryReceiver(logger)
     if not receiver.start():
-        print(f"  [X] UDP bind failed: {receiver.error_msg}")
-        sys.exit(1)
+        from virtual_tcu.bootstrap import report_fatal
+
+        report_fatal(
+            f"UDP port {Cfg.UDP_PORT} bind failed: {receiver.error_msg}\n"
+            "  Close other Virtual TCU / python instances, or change the port in config."
+        )
     print(f"  [OK] UDP listening on 0.0.0.0:{Cfg.UDP_PORT}")
 
     kb = VirtualKeyboard()
@@ -145,6 +149,18 @@ def main():
         asyncio.run(main_async(receiver, tcu, config, logger))
     except KeyboardInterrupt:
         print("\n  Shutting down...")
+    except OSError as e:
+        from virtual_tcu.bootstrap import report_fatal
+
+        report_fatal(
+            f"Web UI port {Cfg.WEB_PORT} unavailable: {e}\n"
+            "  Close other apps using this port (another Virtual TCU instance?).",
+            exc=e,
+        )
+    except Exception as e:
+        from virtual_tcu.bootstrap import report_fatal
+
+        report_fatal("Unexpected error while running.", exc=e)
     finally:
         logger.stop()
         receiver.stop()

@@ -10,6 +10,160 @@
 
 ---
 
+## 快速选择
+
+| 需求 | 说明 |
+|------|------|
+| 只想玩，不装 Python / Node | [下载与使用（Release）](#下载与使用release) |
+| 从仓库源码运行 / 开发 | [从源码运行](#从源码运行) |
+| 改 Vue 前端 | [web-ui/README.md](web-ui/README.md) |
+
+**平台：** 仅 **Windows 10 / 11**。请**以管理员身份运行**（全局按键注入需要）。
+
+---
+
+## 下载与使用（Release）
+
+### 1. 下载
+
+打开 **[GitHub Releases](https://github.com/Quirrel-zh/fh6-virtual_tcu/releases)**，下载最新的 `VirtualTCU-*-win64.zip`。
+
+### 2. 解压
+
+**完整解压**到任意目录（如 `C:\Games\VirtualTCU\`），不要在压缩包预览里直接双击 exe。
+
+```
+VirtualTCU-12.0.x-win64/
+├── Launch VirtualTCU.bat    ← 可选启动器（推荐）
+└── VirtualTCU/
+    ├── VirtualTCU.exe
+    └── _internal/           ← 必需，勿单独移动 exe
+```
+
+### 3. 启动
+
+右键 **`Launch VirtualTCU.bat`** 或 **`VirtualTCU\VirtualTCU.exe`** → **以管理员身份运行**。
+
+会出现黑色命令行窗口；浏览器可能自动打开 **http://127.0.0.1:8765**，否则手动打开。
+
+### 4. 进游戏
+
+按下方 [游戏内设置](#forza-horizon-6-游戏内设置首次配置) 配置 FH6，开始比赛后仪表盘会从离线变为在线。
+
+### 5. 退出
+
+切到**命令行窗口**，按 **`Ctrl + C`**，再关窗口。  
+（**不要**按 **Q** — 那是游戏内降档键。）
+
+### Release 版数据存放位置
+
+Release 的所有用户数据在 **`%APPDATA%\VirtualTCU\`**，**不在** exe 旁边。
+
+| 内容 | 路径 |
+|------|------|
+| 设置 | `%APPDATA%\VirtualTCU\tcu_config.json` |
+| 每车档案 | `%APPDATA%\VirtualTCU\tcu_profiles.json` |
+| 遥测录制日志 | `%APPDATA%\VirtualTCU\logs\` |
+| 启动崩溃日志 | `%APPDATA%\VirtualTCU\crash.log` |
+
+快速打开日志目录：`Win + R` → 输入 `%APPDATA%\VirtualTCU\logs`
+
+### 遥测录制（侧边栏）
+
+1. 在 Web 界面侧边栏点 **开始记录（事件）** 或 **开始记录（全部）**。
+2. 在 FH6 比赛中驾驶（需开启 Data Out）。
+3. 完成后点 **停止** — 文件在停止时才会完整写入。
+
+| 模式 | 说明 |
+|------|------|
+| **事件** | 主要记录换挡瞬间及前后缓冲（约 0.5 MB） |
+| **全部** | 录制期间所有遥测包（最大 10 MB 自动停止） |
+
+文件名为 `tcu_replay_YYYYMMDD_HHMMSS.bin.gz`（gzip 二进制回放，不是普通 `.log`）。
+
+---
+
+## 从源码运行
+
+适用于 git clone 后的开发或自测。
+
+### 环境要求
+
+| 工具 | 版本 | 说明 |
+|------|------|------|
+| Python | 3.10+ | [下载](https://www.python.org/downloads/)，勾选 **Add Python to PATH** |
+| Node.js | 18+ | 仅构建 / 修改 Web UI 时需要 |
+
+### 首次配置
+
+**管理员**命令提示符或 PowerShell：
+
+```bash
+cd path\to\virtualTCU
+pip install -r requirements.txt
+```
+
+```bash
+cd web-ui
+npm install
+npm run build
+cd ..
+```
+
+`npm run build` 会生成 `virtual_tcu/web/dist/`。未构建时访问 `:8765` 只会看到 HTTP **503** 提示页。
+
+### 启动后端
+
+```bash
+cd path\to\virtualTCU
+python -m virtual_tcu
+```
+
+（`python virtual_tcu.py` 亦可。）
+
+浏览器打开 **http://127.0.0.1:8765**，进 FH6 比赛。终端里 **`Ctrl + C`** 退出。
+
+### 源码运行的数据位置
+
+配置、档案、日志写在**项目目录**（当前工作目录）：
+
+```
+virtualTCU/
+├── tcu_config.json
+├── tcu_profiles.json
+└── logs/
+    └── tcu_replay_*.bin.gz
+```
+
+### 前端开发（可选）
+
+终端 1 — 后端：
+
+```bash
+python -m virtual_tcu
+```
+
+终端 2 — Vite 热更新：
+
+```bash
+cd web-ui
+npm run dev
+```
+
+浏览器打开 **http://127.0.0.1:5173**（WebSocket 代理到 8765）。详见 [web-ui/README.md](web-ui/README.md)。
+
+### 本地打包 Release（维护者）
+
+```bash
+cd web-ui && npm run build && cd ..
+pip install pyinstaller
+pyinstaller virtual_tcu.spec --noconfirm
+```
+
+产物在 `dist/VirtualTCU/`，与 GitHub Release 结构相同。推送 `v*` 标签可触发 CI 自动发布。
+
+---
+
 ## 驾驶模式
 
 | 模式 | 说明 |
@@ -21,29 +175,7 @@
 | **OFFROAD** | 越野取向：适应低抓地与起伏路况的换挡策略 |
 | **MANUAL** | 关闭 TCU 自动换挡，由玩家手动控制 |
 
-**F9**（全局热键，Forza 在前台时同样有效）循环切换模式。热键可在 Web 设置中修改。
-
----
-
-## 系统要求
-
-| 项目 | 要求 |
-|------|------|
-| 操作系统 | **Windows 10 / 11**（仅支持 Windows） |
-| Python | **3.10+** — [下载](https://www.python.org/downloads/)，安装时勾选 **Add Python to PATH** |
-| Node.js | 仅在前端开发或重新构建 Web UI 时需要（建议 18+） |
-
-### 安装 Python 依赖
-
-在**管理员**命令提示符中执行（`keyboard` 需要管理员权限才能全局注入按键）：
-
-```bash
-pip install -r requirements.txt
-```
-
-- `keyboard` — 必需，全局热键与虚拟按键注入
-- `aiohttp` — 可选；无则无法启动 Web UI（核心 TCU 可 headless 运行）
-- `pypresence` — 可选，Discord 富状态
+**F9** 循环切换模式，**F8** 切换日志录制（全局热键，Forza 在前台时同样有效）。可在 Web 设置中修改。
 
 ---
 
@@ -62,9 +194,9 @@ pip install -r requirements.txt
 | 升档 | **E** |
 | 降档 | **Q** |
 
-> 手柄/方向盘的换挡键可与上述键盘绑定**同时生效**。TCU 仅通过键盘注入 **E** / **Q**，不会占用油门、转向或其它轴输入。
+> 手柄/方向盘的换挡键可与上述键盘绑定**同时生效**。TCU 仅注入 **E** / **Q**。
 
-### 3. 遥测数据输出（Data Out）
+### 3. 遥测 Data Out
 
 **设置 → HUD 与游戏 → Data Out**：
 
@@ -77,54 +209,14 @@ pip install -r requirements.txt
 
 ---
 
-## 运行
-
-### 日常使用
-
-1. 以**管理员**身份打开命令提示符（推荐，确保换挡注入可靠）。
-2. 进入项目目录并启动：
-
-   ```bash
-   cd path\to\virtualTCU
-   python -m virtual_tcu
-   ```
-
-   也可使用兼容入口：`python virtual_tcu.py`
-
-3. 在浏览器打开 **http://127.0.0.1:8765**。
-4. 启动 FH6 并开始比赛；收到遥测后仪表盘会自动上线。
-5. 在终端按 **Q** 退出程序。
-
-### 首次使用或更新前端后
-
-若仓库中已有 `virtual_tcu/web/dist/`，可直接运行 Python，无需 Node。
-
-需要自行构建 Web UI 时：
-
-```bash
-cd web-ui
-npm install
-npm run build
-```
-
-构建产物输出到 `virtual_tcu/web/dist/`。未构建时，后端会回退到旧版内嵌 `index.html`。
-
-前端开发说明见 [web-ui/README.md](web-ui/README.md)。
-
----
-
 ## Web 仪表盘
 
-连接成功后可在浏览器中查看：
+- **档位 / 车速 / 转速**、**油门 / 刹车**、**TCU 状态**
+- **涡轮 / 发动机**、**统计与换挡历史**
+- **设置**（实时调参、每车配置导入导出）
+- **日志录制**（侧边栏开始/停止）
 
-- **档位 / 车速 / 转速** — 转速条按区间变色（绿 → 黄 → 橙 → 红）
-- **油门 / 刹车** — 踏板百分比
-- **TCU 状态** — 巡航、Kickdown、发动机制动等
-- **涡轮 / 发动机** — 增压（Bar）、功率（kW）、扭矩（Nm）
-- **统计与换挡历史** — 会话数据、学习进度
-- **设置** — 实时调参并写入 `tcu_config.json`；支持导出/导入每车配置
-
-界面语言可在页头切换（English / 简体中文）。
+页头可切换 English / 简体中文。
 
 ---
 
@@ -132,56 +224,59 @@ npm run build
 
 ```
 virtualTCU/
-├── virtual_tcu.py          # 入口（转发至 virtual_tcu.app）
+├── virtual_tcu.py          # 入口
 ├── virtual_tcu/            # Python 核心包
-│   ├── logic/tcu.py        # 换挡逻辑与各驾驶模式
-│   ├── telemetry/          # FH6 UDP 遥测解析
-│   ├── web/                # Web 服务与 dist 静态资源
-│   └── ...
 ├── web-ui/                 # Vue 3 + Tailwind v4 前端
-├── tcu_config.json         # 运行时可调参数（首次运行自动生成）
-├── tcu_profiles.json       # 每车配置存档
-└── logs/                   # 遥测回放日志（可选）
+├── packaging/              # Launch VirtualTCU.bat（打入 Release zip）
+├── virtual_tcu.spec        # PyInstaller 配置
+└── .github/workflows/      # Release CI
 ```
 
 ---
 
 ## 故障排除
 
-### 仪表盘显示离线 / 等待 Forza
+### Release exe 闪退
 
-- 确认游戏内 **Data Out** 已开启，端口为 **5555**。
-- 必须在**比赛中**（菜单内无遥测流）。
-- 修改 Data Out 后建议重启游戏。
+- 完整解压，保留 `_internal/`。
+- 关闭其它 TCU 实例（含 `python -m virtual_tcu`）。
+- cmd 中运行 exe 查看报错；查 **`%APPDATA%\VirtualTCU\crash.log`**。
 
-### TCU 不换挡 / 游戏内无反应
+### 点了录制但找不到文件
 
-- 确认 Forza 键盘绑定：**E** 升档、**Q** 降档。
-- 以**管理员**运行 CMD 后再启动 `python -m virtual_tcu`。
+- Release 日志在 **`%APPDATA%\VirtualTCU\logs\`**，不在 exe 目录。
+- 必须先点 **停止**。
+- **全部**模式 + 比赛中 + Data Out 开启；**事件**模式主要在换挡时才有内容。
+- 文件名是 `tcu_replay_*.bin.gz`。
 
-### F9 无法切换模式
+### 仪表盘离线
 
-- 关闭可能占用 F9 的软件（Discord 覆盖层、MSI Afterburner 等）。
+- Data Out 开、端口 **5555**、**Car Dash** 格式；必须在**比赛中**。
 
-### 档位或车速异常
+### 不换挡
 
-- 本程序针对 **FH6 Car Dash（324 字节）** 数据包校准，不适用于 FH5 或 Forza Motorsport。
+- Forza 键盘 **E/Q**；**管理员**运行。
+
+### 热键无效
+
+- 关闭可能占用 F9/F8 的 overlay 软件。
+
+### 档位/车速异常
+
+- 仅支持 FH6 **324 字节 Car Dash** 包。
 
 ---
 
 ## 说明
 
-- 适配 FH6 任意车辆 — 从遥测读取最大转速，换挡点按车自动校准。
-- **倒档保护** — 倒档时不会自动换挡。
-- **低速保护** — 约 12 km/h 以下不自动换挡，减少停车抖动。
-- 仅发送 **E** / **Q** 键盘事件，不修改手柄或其它输入设备。
+- 任意 FH6 车辆可用，换挡点从遥测自动校准。
+- **倒档保护**、**低速保护**（约 12 km/h 以下不自动换挡）。
+- 仅发送 **E/Q** 键盘事件。
 
 ---
 
 ## 测试环境
 
-- Windows 11
-- Steam 版 Forza Horizon 6
-- Xbox Elite Series 2 手柄
+- Windows 11 · Steam 版 FH6 · Xbox Elite Series 2
 
-遥测结构基于 FH6 **324 字节 Car Dash** 数据包（实车诊断验证）。
+遥测基于 FH6 **324 字节 Car Dash** 数据包（实车诊断验证）。

@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from virtual_tcu.config.constants import Cfg
+from virtual_tcu import paths
 
 class ProfileStore:
-    def __init__(self, path: str = Cfg.PROFILES_FILE):
-        self.path = Path(path)
+    def __init__(self, path: Optional[Union[str, Path]] = None):
+        self.path = Path(path) if path is not None else paths.profiles_file()
         self.data: dict = {}
         self.load()
 
@@ -19,6 +19,7 @@ class ProfileStore:
 
     def save(self):
         try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
             self.path.write_text(json.dumps(self.data, indent=2))
         except Exception as e:
             print(f"[Profiles] save failed: {e}")

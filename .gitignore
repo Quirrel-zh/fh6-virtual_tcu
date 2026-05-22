@@ -38,7 +38,9 @@ logs/
 # ── PyInstaller / release packaging (future) ───────────────────────────
 /build/
 /dist/
-/release/
+/release-staging/
+/_internal/
+/VirtualTCU.exe
 *.spec.bak
 
 # ── IDE & OS ───────────────────────────────────────────────────────────

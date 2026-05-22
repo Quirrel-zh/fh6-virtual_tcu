@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from virtual_tcu.telemetry.model import Telemetry
 

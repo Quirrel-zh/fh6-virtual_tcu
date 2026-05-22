@@ -2,6 +2,10 @@
 
 __version__ = "12.0"
 
-from virtual_tcu.app import main
-
 __all__ = ["__version__", "main"]
+
+
+def main():
+    from virtual_tcu.app import main as _main
+
+    return _main()

@@ -8,6 +8,12 @@ Virtual TCU is a Windows-only external adaptive transmission controller for Forz
 
 ## Running
 
+### Release (Windows, no Python/Node)
+
+Download `VirtualTCU-*-win64.zip` from GitHub Releases, extract, and run `VirtualTCU.exe` as Administrator. User data: `%APPDATA%\VirtualTCU\`.
+
+### From source
+
 ```bash
 python -m virtual_tcu
 # or (backward compatible)
@@ -15,6 +21,17 @@ python virtual_tcu.py
 ```
 
 Requires Windows (uses `winsound`, `keyboard` library needs admin for global key injection). Opens a web UI at http://127.0.0.1:8765 with live dashboard and settings.
+
+### Packaging (maintainers)
+
+```bash
+cd web-ui && npm ci && npm run build
+pip install -r requirements.txt pyinstaller
+pyinstaller virtual_tcu.spec --noconfirm
+# output: dist/VirtualTCU/VirtualTCU.exe
+```
+
+Push a tag `v*` (e.g. `v12.0.1`) to trigger `.github/workflows/release.yml`.
 
 ## Dependencies
 
@@ -43,7 +60,7 @@ virtual_tcu/
   learning/           # Gear ratios, power curve, rev limiter, drive style
   state/              # Shift history, session stats, graph buffer, watchdog
   logic/tcu.py        # TCULogic — shift rules and drive modes
-  web/                # WebServer + index.html dashboard
+  web/                # WebServer + bundled dist/ assets
   integrations/       # Discord RPC
 ```
 
@@ -52,7 +69,7 @@ virtual_tcu/
 1. **TelemetryReceiver** — UDP socket on port 5555, parses FH6's 324-byte packet into a `Telemetry` dataclass
 2. **TCULogic.process()** — runs at 60Hz in the async loop, evaluates shift rules against current telemetry
 3. **VirtualKeyboard** — fires E/Q keypresses in daemon threads with configurable hold duration
-4. **WebServer** — aiohttp app serves `web/index.html` and broadcasts state over WebSocket at 30Hz
+4. **WebServer** — aiohttp app serves `web/dist/` and broadcasts state over WebSocket at 30Hz
 
 ### Learning Systems (per-car, runtime only — not persisted)
 
@@ -66,6 +83,11 @@ virtual_tcu/
 Each mode is a method on `TCULogic` (`_mode_comfort`, `_mode_dynamic`, `_mode_race`, `_mode_drift`, `_mode_offroad`). They share common building blocks: `_track_brake_down`, `_track_upshift_in_band`, `_track_out_of_band_kickdown`, and safety guards (anti-stall, over-rev, cornering lock, airtime lock, transient lock).
 
 ### Configuration
+
+Paths are resolved in `virtual_tcu/paths.py`:
+
+- **Dev** — config/profiles/logs in the current working directory
+- **Frozen (PyInstaller)** — `%APPDATA%/VirtualTCU/` for writable data; `sys._MEIPASS/virtual_tcu/web/dist` for UI assets
 
 - `tcu_config.json` — all tunable parameters (shift points, feature toggles, hotkeys). Auto-created with defaults on first run. Editable live via web UI.
 - `tcu_profiles.json` — per-car profile storage (keyed by car_ordinal)
@@ -85,7 +107,7 @@ npm run format       # prettier + prettier-plugin-tailwindcss
 npm run typecheck    # vue-tsc --noEmit
 ```
 
-Legacy `virtual_tcu/web/index.html` is served if `dist/` is absent.
+If `dist/` is absent, `/` returns HTTP 503 with build/download instructions.
 
 WebSocket messages: `telemetry`, `state`, `config_reset`, `log_status`. Settings use `set_config` and persist immediately.
 
