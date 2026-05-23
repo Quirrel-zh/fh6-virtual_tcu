@@ -1,6 +1,5 @@
-import threading
 import time
-
+from concurrent.futures import ThreadPoolExecutor
 import keyboard
 
 from virtual_tcu.config.constants import Cfg
@@ -12,6 +11,8 @@ class VirtualKeyboard:
         self._config = config
         self._self_press_until: dict[str, float] = {}
         self.SELF_PRESS_WINDOW_S = 0.15
+        # Single worker ensures keystrokes are executed sequentially without thread leaks
+        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="KB_Worker")
 
     @property
     def key_up(self) -> str:
@@ -32,24 +33,20 @@ class VirtualKeyboard:
             time.sleep(Cfg.KEY_HOLD_S)
             keyboard.release(key)
         except Exception as e:
-            print(f"[KB] {e}")
+            print(f"[KB] Input simulation failed: {e}")
 
     def shift_up(self):
-        threading.Thread(
-            target=self._press_release, args=(self.key_up,), daemon=True
-        ).start()
+        self._executor.submit(self._press_release, self.key_up)
 
     def shift_down(self):
-        threading.Thread(
-            target=self._press_release, args=(self.key_down,), daemon=True
-        ).start()
+        self._executor.submit(self._press_release, self.key_down)
 
     def shift_down_double(self):
-        """Two downshift presses with 60ms gap — skip-gear for hard braking."""
-
         def _double():
             self._press_release(self.key_down)
             time.sleep(0.06)
             self._press_release(self.key_down)
-
-        threading.Thread(target=_double, daemon=True).start()
+        self._executor.submit(_double)
+        
+    def shutdown(self):
+        self._executor.shutdown(wait=False)
