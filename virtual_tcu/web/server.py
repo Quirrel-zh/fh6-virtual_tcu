@@ -113,8 +113,11 @@ class WebServer:
             key = msg.get("key", "")
             val = msg.get("value")
             self._config.set(key, val)
+            if key in ("shift_key_up", "shift_key_down"):
+                self._tcu.refresh_shift_keys()
         elif t == "reset_config":
             self._config.reset()
+            self._tcu.refresh_shift_keys()
             await ws.send_json({"type": "config_reset", "data": self._config.data})
         elif t == "log_start":
             mode = msg.get("mode", "events")
@@ -143,6 +146,7 @@ class WebServer:
                     for k, v in imported["config"].items():
                         if k in DEFAULTS:
                             self._config.set(k, v)
+                    self._tcu.refresh_shift_keys()
                     await ws.send_json(
                         {
                             "type": "profile_imported",

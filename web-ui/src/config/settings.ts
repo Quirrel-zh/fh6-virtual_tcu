@@ -65,6 +65,11 @@ export const HOTKEY_FIELDS = [
   { key: 'hotkey_toggle_log', i18nKey: 'toggleLog', placeholder: 'f8' },
 ] as const
 
+export const SHIFT_KEY_FIELDS = [
+  { key: 'shift_key_up', i18nKey: 'shiftKeyUp', placeholder: 'e' },
+  { key: 'shift_key_down', i18nKey: 'shiftKeyDown', placeholder: 'q' },
+] as const
+
 export const SETTING_GROUPS: { i18nKey: string, keys: string[], hintKey?: string }[] = [
   { i18nKey: 'launchControl', keys: ['launch_rpm'] },
   { i18nKey: 'comfort', keys: ['comfort_up_wot'] },

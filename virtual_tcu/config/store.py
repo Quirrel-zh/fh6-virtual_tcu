@@ -69,7 +69,11 @@ class ConfigStore:
         try:
             default_v = DEFAULTS[key]
             if isinstance(default_v, str):
-                value = str(value)
+                value = str(value).strip().lower()
+                if not value and key.startswith("shift_key_"):
+                    value = str(default_v)
+                elif not value and key.startswith("hotkey_"):
+                    value = str(default_v)
             elif isinstance(default_v, bool):
                 if isinstance(value, str):
                     value = value.strip().lower() in ("true", "1", "t", "y", "yes")

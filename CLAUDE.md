@@ -10,7 +10,7 @@ Virtual TCU is a Windows-only external adaptive transmission controller for Forz
 
 ### Release (Windows, no Python/Node)
 
-Download `VirtualTCU-*-win64.zip` from GitHub Releases, extract, and run `VirtualTCU.exe` as Administrator. User data: `%APPDATA%\VirtualTCU\`.
+Download `VirtualTCU-*-win64.zip` from GitHub Releases, extract, and run `VirtualTCU.exe` as Administrator. User data (config, profiles, logs) is stored **next to the exe** in the install folder; falls back to `%APPDATA%\VirtualTCU\` if that folder is not writable.
 
 ### From source
 
@@ -87,7 +87,7 @@ Each mode is a method on `TCULogic` (`_mode_comfort`, `_mode_dynamic`, `_mode_ra
 Paths are resolved in `virtual_tcu/paths.py`:
 
 - **Dev** — config/profiles/logs in the current working directory
-- **Frozen (PyInstaller)** — `%APPDATA%/VirtualTCU/` for writable data; `sys._MEIPASS/virtual_tcu/web/dist` for UI assets
+- **Frozen (PyInstaller)** — `VirtualTCU.exe` directory for writable data (`tcu_config.json`, `logs/`, etc.); `%APPDATA%/VirtualTCU/` fallback if install dir is read-only; `sys._MEIPASS/virtual_tcu/web/dist` for UI assets
 
 - `tcu_config.json` — all tunable parameters (shift points, feature toggles, hotkeys). Auto-created with defaults on first run. Editable live via web UI.
 - `tcu_profiles.json` — per-car profile storage (keyed by car_ordinal)

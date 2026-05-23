@@ -96,38 +96,64 @@ class TCULogic:
 
         self._launch_armed = False
         self._cornering_locked = False
-        self._q_held = False
-        self._e_held = False
+        self._down_held = False
+        self._up_held = False
         self._slip_streak = 0
+        self._paddle_keys: tuple[str, str] = ("", "")
         if Cfg.REVERSE_HOLD_MS > 0:
             self._setup_paddle_listeners()
 
     def _setup_paddle_listeners(self):
         kb = self._kb
+        down_key = kb.key_down
+        up_key = kb.key_up
 
-        def on_q_down(e):
-            if not kb.is_self_press("q"):
-                self._q_held = True
+        if (down_key, up_key) == self._paddle_keys:
+            return
 
-        def on_q_up(e):
-            if not kb.is_self_press("q"):
-                self._q_held = False
+        self._teardown_paddle_listeners()
+        self._down_held = False
+        self._up_held = False
 
-        def on_e_down(e):
-            if not kb.is_self_press("e"):
-                self._e_held = True
+        def on_down_press(_e):
+            if not kb.is_self_press(down_key):
+                self._down_held = True
 
-        def on_e_up(e):
-            if not kb.is_self_press("e"):
-                self._e_held = False
+        def on_down_release(_e):
+            if not kb.is_self_press(down_key):
+                self._down_held = False
+
+        def on_up_press(_e):
+            if not kb.is_self_press(up_key):
+                self._up_held = True
+
+        def on_up_release(_e):
+            if not kb.is_self_press(up_key):
+                self._up_held = False
 
         try:
-            keyboard.on_press_key("q", on_q_down)
-            keyboard.on_release_key("q", on_q_up)
-            keyboard.on_press_key("e", on_e_down)
-            keyboard.on_release_key("e", on_e_up)
+            keyboard.on_press_key(down_key, on_down_press)
+            keyboard.on_release_key(down_key, on_down_release)
+            keyboard.on_press_key(up_key, on_up_press)
+            keyboard.on_release_key(up_key, on_up_release)
+            self._paddle_keys = (down_key, up_key)
         except Exception as e:
             print(f"[Paddle hooks] failed: {e}")
+
+    def _teardown_paddle_listeners(self):
+        down_key, up_key = self._paddle_keys
+        for key in (down_key, up_key):
+            if not key:
+                continue
+            try:
+                keyboard.unhook_key(key)
+            except Exception:
+                pass
+        self._paddle_keys = ("", "")
+
+    def refresh_shift_keys(self):
+        if Cfg.REVERSE_HOLD_MS > 0:
+            self._setup_paddle_listeners()
 
     @property
     def mode(self) -> Mode:
@@ -331,7 +357,7 @@ class TCULogic:
             self._discord_rpc.update(self.mode.value, self._shift_count, td.speed_kmh)
 
         if self._config.get("feat_reverse_hold"):
-            result = self._reverse_hold.update(td, self._q_held, self._e_held, now)
+            result = self._reverse_hold.update(td, self._down_held, self._up_held, now)
             if result == "ENGAGED_REVERSE":
                 self._tcu_state = "REVERSE (held)"
                 self._tcu_state_sub = "user engaged R"

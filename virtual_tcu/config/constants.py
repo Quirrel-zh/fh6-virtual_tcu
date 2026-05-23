@@ -59,5 +59,7 @@ DEFAULTS = {
     "feat_drive_style": True,
     "hotkey_cycle_mode": "f9",
     "hotkey_toggle_log": "f8",
+    "shift_key_up": "e",
+    "shift_key_down": "q",
     "current_mode": "COMFORT",
 }

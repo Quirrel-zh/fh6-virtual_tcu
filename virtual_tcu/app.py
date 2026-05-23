@@ -137,7 +137,7 @@ def main():
         )
     print(f"  [OK] UDP listening on 0.0.0.0:{Cfg.UDP_PORT}")
 
-    kb = VirtualKeyboard()
+    kb = VirtualKeyboard(config)
     tcu = TCULogic(kb, profiles, config, logger)
     setup_hotkeys(tcu, config, logger)
 

@@ -57,16 +57,27 @@ VirtualTCU-12.0.x-win64/
 
 ### Release 版数据存放位置
 
-Release 的所有用户数据在 **`%APPDATA%\VirtualTCU\`**，**不在** exe 旁边。
+Release 的配置、档案、日志默认保存在 **`VirtualTCU.exe` 同目录**（便携模式）：
 
-| 内容 | 路径 |
-|------|------|
-| 设置 | `%APPDATA%\VirtualTCU\tcu_config.json` |
-| 每车档案 | `%APPDATA%\VirtualTCU\tcu_profiles.json` |
-| 遥测录制日志 | `%APPDATA%\VirtualTCU\logs\` |
-| 启动崩溃日志 | `%APPDATA%\VirtualTCU\crash.log` |
+```
+VirtualTCU/
+├── VirtualTCU.exe
+├── _internal/
+├── tcu_config.json
+├── tcu_profiles.json
+├── logs/
+│   └── tcu_replay_*.bin.gz
+└── .tcu_last_run
+```
 
-快速打开日志目录：`Win + R` → 输入 `%APPDATA%\VirtualTCU\logs`
+若安装目录不可写（例如装在 `C:\Program Files\`），会自动回退到 **`%APPDATA%\VirtualTCU\`**。启动时黑窗口会打印实际使用的路径。
+
+| 内容 | 默认位置（Release） |
+|------|---------------------|
+| 设置 | `VirtualTCU\tcu_config.json` |
+| 每车档案 | `VirtualTCU\tcu_profiles.json` |
+| 遥测录制 | `VirtualTCU\logs\` |
+| 崩溃日志 | 同上目录下的 `crash.log` |
 
 ### 遥测录制（侧边栏）
 
@@ -240,11 +251,11 @@ virtualTCU/
 
 - 完整解压，保留 `_internal/`。
 - 关闭其它 TCU 实例（含 `python -m virtual_tcu`）。
-- cmd 中运行 exe 查看报错；查 **`%APPDATA%\VirtualTCU\crash.log`**。
+- cmd 中运行 exe 查看报错；查启动时打印的数据目录下的 **`crash.log`**。
 
 ### 点了录制但找不到文件
 
-- Release 日志在 **`%APPDATA%\VirtualTCU\logs\`**，不在 exe 目录。
+- Release 日志在 **exe 同目录的 `logs\`**（回退时在 `%APPDATA%\VirtualTCU\logs\`）。
 - 必须先点 **停止**。
 - **全部**模式 + 比赛中 + Data Out 开启；**事件**模式主要在换挡时才有内容。
 - 文件名是 `tcu_replay_*.bin.gz`。

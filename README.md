@@ -57,16 +57,27 @@ Focus the **console window** and press **`Ctrl + C`**, then close the window.
 
 ### Where Release data is stored
 
-Release builds save all user data under **`%APPDATA%\VirtualTCU\`**, **not** next to the exe.
+Release builds save config, profiles, and logs **in the same folder as `VirtualTCU.exe`** (portable-style):
 
-| Item | Path |
-|------|------|
-| Settings | `%APPDATA%\VirtualTCU\tcu_config.json` |
-| Per-car profiles | `%APPDATA%\VirtualTCU\tcu_profiles.json` |
-| Telemetry replay logs | `%APPDATA%\VirtualTCU\logs\` |
-| Crash log (if startup fails) | `%APPDATA%\VirtualTCU\crash.log` |
+```
+VirtualTCU/
+├── VirtualTCU.exe
+├── _internal/
+├── tcu_config.json
+├── tcu_profiles.json
+├── logs/
+│   └── tcu_replay_*.bin.gz
+└── .tcu_last_run
+```
 
-Quick open logs folder: `Win + R` → type `%APPDATA%\VirtualTCU\logs`
+If the install folder is not writable (e.g. `C:\Program Files\`), data falls back to **`%APPDATA%\VirtualTCU\`** (the console shows which path is used on startup).
+
+| Item | Default (Release) |
+|------|-------------------|
+| Settings | `VirtualTCU\tcu_config.json` |
+| Per-car profiles | `VirtualTCU\tcu_profiles.json` |
+| Telemetry replay logs | `VirtualTCU\logs\` |
+| Crash log (if startup fails) | same folder as above / `crash.log` |
 
 ### Telemetry recording (sidebar)
 
@@ -246,11 +257,11 @@ virtualTCU/
 - Extract the **full** zip — exe needs `_internal/` beside it.
 - Close other TCU instances (`python -m virtual_tcu` or another `VirtualTCU.exe`) — ports **5555** / **8765** are single-use.
 - Run from cmd: `cd path\to\VirtualTCU` then `VirtualTCU.exe` (failed builds pause with an error).
-- Check **`%APPDATA%\VirtualTCU\crash.log`**.
+- Check **`crash.log`** in the data folder shown at startup (exe dir or `%APPDATA%\VirtualTCU\`).
 
 ### Recording started but no log file found
 
-- Release logs go to **`%APPDATA%\VirtualTCU\logs\`**, not the exe folder.
+- Release logs are in **`VirtualTCU\logs\`** next to the exe (or `%APPDATA%\VirtualTCU\logs\` if fallback).
 - Click **Stop** before looking — the gzip file is finalized on stop.
 - Use **All** mode and drive in a race with Data Out ON; **Events** mode only writes meaningful data around shifts.
 - Look for `tcu_replay_*.bin.gz`, not `.log`.

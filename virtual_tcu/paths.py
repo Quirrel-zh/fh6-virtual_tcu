@@ -18,14 +18,43 @@ def bundle_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def user_data_dir() -> Path:
-    """Writable data directory (%APPDATA%/VirtualTCU when frozen, cwd in dev)."""
+def install_dir() -> Path:
+    """Directory containing VirtualTCU.exe (frozen) or project cwd (dev)."""
     if is_frozen():
-        root = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
-        data = root / "VirtualTCU"
+        return Path(sys.executable).resolve().parent
+    return Path.cwd()
+
+
+def _appdata_dir() -> Path:
+    root = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
+    return root / "VirtualTCU"
+
+
+def _dir_is_writable(directory: Path) -> bool:
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        probe = directory / ".tcu_write_probe"
+        probe.write_text("")
+        probe.unlink(missing_ok=True)
+        return True
+    except OSError:
+        return False
+
+
+def user_data_dir() -> Path:
+    """Writable data directory (exe folder when frozen, cwd in dev)."""
+    if is_frozen():
+        data = install_dir()
+        if not _dir_is_writable(data):
+            print(
+                f"  [!] Install folder not writable ({data}), "
+                f"using {_appdata_dir()}"
+            )
+            data = _appdata_dir()
+            data.mkdir(parents=True, exist_ok=True)
     else:
         data = Path.cwd()
-    data.mkdir(parents=True, exist_ok=True)
+        data.mkdir(parents=True, exist_ok=True)
     return data
 
 
