@@ -43,9 +43,7 @@ function onOpenImport() {
 
 <template>
   <AppHeader :mode="mode" :connected="connected" :live="live" />
-  <main
-    class="grid gap-px bg-tcu-border max-[1100px]:grid-cols-1 grid-cols-[260px_1fr_340px]"
-  >
+  <main class="grid gap-px bg-tcu-border max-[1100px]:grid-cols-1 grid-cols-[260px_1fr_340px]">
     <ModeSidebar
       :mode="mode"
       :shift-count="shiftCount"
@@ -70,6 +68,7 @@ function onOpenImport() {
     />
   </main>
   <AppFooter :config="config" />
+  
   <ProfileModal
     :open="modal.open"
     :mode="modal.mode"
