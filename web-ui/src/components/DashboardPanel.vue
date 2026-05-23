@@ -7,7 +7,6 @@ const props = defineProps({
 })
 const { live, telemetry } = toRefs(props)
 
-// Güvenli veri erişimi ve formatlama
 const t = computed(() => telemetry.value || {})
 const speed = computed(() => Math.round(t.value.speed_kmh || 0))
 const rpm = computed(() => Math.round(t.value.rpm || 0))
@@ -40,28 +39,24 @@ const gear = computed(() => {
   return g || '-'
 })
 
-// RPM LED Matrix Hesaplaması (MoTeC Stili)
 const getLedColor = (index, pct) => {
   const totalLeds = 20
   const threshold = index / totalLeds
   
-  if (pct < threshold) return 'bg-[#18181b] shadow-none' // Off state
+  if (pct < threshold) return 'bg-[#18181b] shadow-none' 
   
-  if (index > 17) return 'bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.9)]' // Limiter
-  if (index > 13) return 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.9)]' // Redline
-  if (index > 8) return 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]' // Powerband
-  return 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]' // Low RPM
+  if (index > 17) return 'bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.9)]'
+  if (index > 13) return 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.9)]' 
+  if (index > 8) return 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]'
+  return 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]'
 }
 
-// 2D G-Force Vizör Pozisyonu
 const gDotStyle = computed(() => {
   const maxG = 1.5
-  // Clamp values
   const x = Math.max(-maxG, Math.min(maxG, gLat.value))
   const y = Math.max(-maxG, Math.min(maxG, gLon.value))
-  // Convert to percentage (0% to 100%, center is 50%)
   const px = 50 + (x / maxG) * 50
-  const py = 50 - (y / maxG) * 50 // Invert Y for UI
+  const py = 50 - (y / maxG) * 50
   return { left: `${px}%`, top: `${py}%` }
 })
 </script>
@@ -263,7 +258,6 @@ const gDotStyle = computed(() => {
 </template>
 
 <style scoped>
-/* DOM Titremesini önlemek için font optimizasyonu */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
