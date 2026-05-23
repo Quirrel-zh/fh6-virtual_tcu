@@ -120,6 +120,7 @@ def main():
         from virtual_tcu.bootstrap import report_fatal
         report_fatal(f"UDP port {Cfg.UDP_PORT} bind failed. {receiver.error_msg}")
 
+    # AIOHTTP Windows Event Loop Exception Fix
     if sys.platform == 'win32':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
