@@ -82,7 +82,8 @@ class WebServer:
                 if msg.type == WSMsgType.TEXT:
                     try:
                         data = json.loads(msg.data)
-                        await self._handle_client_msg(data, ws)
+                        if isinstance(data, dict):
+                            await self._handle_client_msg(data, ws)
                     except Exception as e:
                         print(f"[WS] msg error: {e}")
                 elif msg.type == WSMsgType.ERROR:
@@ -157,20 +158,17 @@ class WebServer:
         tcu_interval = 1.0 / 60.0
         broadcast_every_n = 2
         tick = 0
-        last_packet_id = -1
         while True:
             await asyncio.sleep(tcu_interval)
             tick += 1
-            
-            # RACE CONDITION DÜZELTMESİ (process() çağrısı silindi, sadece snapshot alınıyor)
-            td = self._recv.latest()
-            current_id = self._recv.packets_total
             
             if tick % broadcast_every_n != 0:
                 continue
             if not self._clients:
                 continue
                 
+            td = self._recv.latest()
+            
             payload_tel = {"type": "telemetry", "data": self._tcu.snapshot(td)}
             payload_st = {
                 "type": "state",
@@ -181,14 +179,22 @@ class WebServer:
                     "packets_total": self._recv.packets_total,
                 },
             }
+            
             dead = set()
-            for client in list(self._clients):
+
+            async def _send_safe(client_ws):
                 try:
-                    await client.send_json(payload_tel)
-                    await client.send_json(payload_st)
+                    await client_ws.send_json(payload_tel)
+                    await client_ws.send_json(payload_st)
                 except Exception:
-                    dead.add(client)
-            self._clients -= dead
+                    dead.add(client_ws)
+
+            tasks = [_send_safe(client) for client in self._clients]
+            if tasks:
+                await asyncio.gather(*tasks)
+
+            if dead:
+                self._clients -= dead
 
     async def start(self):
         app = web.Application()

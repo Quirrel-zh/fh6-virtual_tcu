@@ -45,11 +45,13 @@ class TCULogic:
         self._data_lock = threading.RLock()
         
         self._audio_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="TCU_Audio")
+        self._discord_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="TCU_Discord")
 
         try:
             self._mode = Mode(config.get("current_mode", "COMFORT"))
-        except ValueError:
+        except (ValueError, KeyError):
             self._mode = Mode.COMFORT
+            
         self._last_auto_mode = self._mode if self._mode != Mode.MANUAL else Mode.COMFORT
         self._last_processed_mode = self._mode
 
@@ -104,13 +106,14 @@ class TCULogic:
         self._cornering_locked = False
         self._down_held = False
         self._up_held = False
-        self._slip_streak = 0
         self._paddle_keys: tuple[str, str] = ("", "")
+        
         if Cfg.REVERSE_HOLD_MS > 0:
             self._setup_paddle_listeners()
 
     def shutdown(self):
         self._audio_executor.shutdown(wait=False)
+        self._discord_executor.shutdown(wait=False)
         if self._discord_rpc:
             self._discord_rpc.close()
         self._teardown_paddle_listeners()
@@ -120,6 +123,9 @@ class TCULogic:
         down_key = kb.key_up
         up_key = kb.key_down
 
+        if not down_key or not up_key:
+            return
+
         if (down_key, up_key) == self._paddle_keys:
             return
 
@@ -128,19 +134,19 @@ class TCULogic:
         self._up_held = False
 
         def on_down_press(_e):
-            if not kb.is_self_press(down_key):
+            if hasattr(kb, 'is_self_press') and not kb.is_self_press(down_key):
                 self._down_held = True
 
         def on_down_release(_e):
-            if not kb.is_self_press(down_key):
+            if hasattr(kb, 'is_self_press') and not kb.is_self_press(down_key):
                 self._down_held = False
 
         def on_up_press(_e):
-            if not kb.is_self_press(up_key):
+            if hasattr(kb, 'is_self_press') and not kb.is_self_press(up_key):
                 self._up_held = True
 
         def on_up_release(_e):
-            if not kb.is_self_press(up_key):
+            if hasattr(kb, 'is_self_press') and not kb.is_self_press(up_key):
                 self._up_held = False
 
         try:
@@ -304,6 +310,7 @@ class TCULogic:
             self._throttle_raw_history.clear()
             self._tcu_state = "RESUMING"
             self._tcu_state_sub = "from menu/pause"
+            
         self._last_packet_time = now
 
         if td.is_shifting:
@@ -328,10 +335,13 @@ class TCULogic:
         self._speed_history.append(td.speed_kmh)
         self._brake_raw_history.append(td.brake)
         self._throttle_raw_history.append(td.throttle)
+        
         td.accel_raw = int(
-            (sum(self._throttle_history) / len(self._throttle_history)) * 255
+            (sum(self._throttle_history) / max(1, len(self._throttle_history))) * 255
         )
-        td.brake_raw = int((sum(self._brake_history) / len(self._brake_history)) * 255)
+        td.brake_raw = int(
+            (sum(self._brake_history) / max(1, len(self._brake_history))) * 255
+        )
 
         if td.brake > 0.15:
             self._last_brake_time = now
@@ -371,8 +381,14 @@ class TCULogic:
         )
         self._graph_buffer.push(td)
         self._watchdog.heartbeat()
+        
         if self._discord_rpc is not None and self._config.get("feat_discord_rpc"):
-            self._discord_rpc.update(self.mode.value, self._shift_count, td.speed_kmh)
+            self._discord_executor.submit(
+                self._discord_rpc.update, 
+                self.mode.value, 
+                self._shift_count, 
+                td.speed_kmh
+            )
 
         if self._config.get("feat_reverse_hold"):
             result = self._reverse_hold.update(td, self._down_held, self._up_held, now)
@@ -386,6 +402,7 @@ class TCULogic:
             self._tcu_state_sub = "TCU passive"
             self._reverse_lock_until = now + 2.0
             return
+            
         if now < self._reverse_lock_until:
             self._tcu_state = "REVERSE"
             self._tcu_state_sub = "exiting R..."
@@ -408,6 +425,7 @@ class TCULogic:
             if self._config.get("feat_shift_advisor"):
                 self._compute_shift_advisor(td)
             return
+            
         self._shift_hint = ""
 
         if self._config.get("feat_launch_control") and self._launch_control(td, now):
@@ -465,6 +483,7 @@ class TCULogic:
             return False
         if td.gear <= 2:
             lock_ms = max(lock_ms, Cfg.LOW_GEAR_LOCK_MS)
+            
         self._tcu_state = state
         self._tcu_state_sub = sub
         now = time.time()
@@ -489,12 +508,15 @@ class TCULogic:
         now = time.time()
         if now < self._no_downshift_until:
             return False
+            
         projected = self._calibrator.project_rpm_after_shift(td, td.gear - 1)
         if projected is None:
             projected = td.current_rpm * (td.gear / max(td.gear - 1, 1))
+            
         if projected > td.engine_max_rpm * Cfg.OVER_REV_LIMIT:
             self._tcu_state = "OVER-REV BLOCKED"
             return False
+            
         self._tcu_state = state
         self._tcu_state_sub = sub
         self._lock_until = now + (lock_ms / 1000.0)
@@ -507,8 +529,8 @@ class TCULogic:
             cascade_lock = 0.60
         else:
             cascade_lock = 0.90
+            
         self._no_downshift_until = now + cascade_lock
-
         self._we_shifted = True
         self._shift_count += 1
         self._last_downshift_time = now
@@ -526,11 +548,14 @@ class TCULogic:
         now = time.time()
         if now < self._no_downshift_until:
             return False
+            
         projected = self._calibrator.project_rpm_after_shift(td, td.gear - 2)
         if projected is None:
             projected = td.current_rpm * (td.gear / max(td.gear - 2, 1))
+            
         if projected > td.engine_max_rpm * Cfg.OVER_REV_LIMIT:
             return False
+            
         self._tcu_state = "BRAKE DOWN"
         self._tcu_state_sub = f"skip →{target}"
         self._lock_until = now + (lock_ms / 1000.0)
@@ -540,8 +565,7 @@ class TCULogic:
         self._last_downshift_time = now
         self._kb.shift_down_double()
         self._logger.mark_event()
-        self._shift_history.record("DOWN", td, reason="SKIP DOWN",
-                                   rule=self.mode.value)
+        self._shift_history.record("DOWN", td, reason="SKIP DOWN", rule=self.mode.value)
         self._session_stats.record_shift("DOWN", "BRAKE DOWN")
         self._session_stats.record_shift("DOWN", "BRAKE DOWN")
         if WINSOUND_OK and self._config.get("feat_sound_beep"):
@@ -610,11 +634,11 @@ class TCULogic:
             self._slip_streak = 0
             return False
             
-        if td.drivetrain == 0:  # FWD
+        if td.drivetrain == 0:  
             slip = max(td.slip_fl, td.slip_fr)
-        elif td.drivetrain == 1:  # RWD
+        elif td.drivetrain == 1:  
             slip = max(td.slip_rl, td.slip_rr)
-        else:  # AWD or unknown
+        else:  
             slip = max(td.slip_fl, td.slip_fr, td.slip_rl, td.slip_rr)
 
         if slip > 1.2:
@@ -631,25 +655,31 @@ class TCULogic:
             return False
         if td.gear <= 1 or td.speed_kmh <= 25.0:
             return False
+            
         brake_margin = 0.20 * min(1.0, td.brake / 0.80)
         projected_speed = td.speed_kmh * (1.0 - brake_margin)
         target = self._target_gear_for_braking(td, speed_override=projected_speed)
+        
         if target is not None and target >= td.gear:
             if not (td.rpm_pct < 0.50 and td.brake > 0.70):
                 return False
+                
         if (target is not None and target <= td.gear - 3
                 and td.brake > 0.80 and td.gear >= 4):
             if self._shift_down_double(td, lock_ms, target):
                 self._no_upshift_until = now + 0.5
                 return True
+                
         if target is not None and target < td.gear - 1:
             sub = f"→{target}"
         elif target is None:
             sub = "no ratio data"
         else:
             sub = "panic brake"
+            
         if not self._shift_down(td, lock_ms, "BRAKE DOWN", sub):
             return False
+            
         self._no_upshift_until = now + 0.5
         return True
 
@@ -665,10 +695,12 @@ class TCULogic:
             return False
         if td.gear <= 2:
             return False
+            
         peak_torque = self._power_curve.peak_torque_rpm(td.car_ordinal)
         threshold = peak_torque - 0.10 if peak_torque is not None else 0.55
         if climbing:
             threshold += 0.08
+            
         if td.rpm_pct >= threshold:
             return False
         if not self._shift_down(
@@ -691,6 +723,7 @@ class TCULogic:
             return False
         if td.speed_kmh <= Cfg.MIN_SPEED_KMH:
             return False
+            
         fallback = self._config.get("race_up_wot", 94) / 100
         target_pct = self._power_curve.optimal_upshift_rpm(
             td, fallback=fallback, offset=offset
@@ -708,6 +741,7 @@ class TCULogic:
             return False
         if len(self._speed_history) < 15:
             return False
+            
         old_speed = sum(list(self._speed_history)[:5]) / 5
         new_speed = sum(list(self._speed_history)[-5:]) / 5
         return (new_speed - old_speed) > 2.0
@@ -763,9 +797,11 @@ class TCULogic:
             self._attitude_sub = "low speed"
             self._grip_usage = 0.0
             return
+            
         lat_g = abs(self._g_lat)
         self._grip_usage = min(1.0, lat_g / 1.2)
         yaw_abs = abs(td.ang_vel_z)
+        
         if lat_g < 0.3 and yaw_abs < 0.1:
             self._attitude = "NEUTRAL"
             self._attitude_sub = "straight or gentle"

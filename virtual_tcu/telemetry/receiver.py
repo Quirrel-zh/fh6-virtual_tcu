@@ -55,7 +55,9 @@ class TelemetryReceiver:
     def _loop(self):
         while self._running.is_set():
             try:
-                # Production-grade socket polling instead of exception catching
+                if self._sock is None:
+                    break
+                    
                 ready = select.select([self._sock], [], [], 0.5)
                 if not ready[0]:
                     continue
@@ -76,10 +78,12 @@ class TelemetryReceiver:
                         self.on_packet(td, raw)
                         
             except OSError:
-                break
+                if not self._running.is_set():
+                    break
+                time.sleep(0.01)
             except Exception as e:
                 print(f"[UDP] Error in receiver loop: {e}")
-                time.sleep(0.1)
+                time.sleep(0.01)
 
     def latest(self) -> Optional[Telemetry]:
         with self._lock:

@@ -5,9 +5,9 @@ from virtual_tcu.telemetry.model import FH6_PACKET_SIZE, Telemetry
 
 
 def parse_fh6_packet(data: bytes) -> Optional[Telemetry]:
-    # Ensure minimum boundary safety for standard FH4/FH5/FH6 Dash array
     if len(data) < 324 or len(data) < FH6_PACKET_SIZE:
         return None
+        
     try:
         is_race, _ts, max_rpm, _idle, cur_rpm = struct.unpack_from("<iIfff", data, 0)
         ax, ay, az = struct.unpack_from("<fff", data, 20)

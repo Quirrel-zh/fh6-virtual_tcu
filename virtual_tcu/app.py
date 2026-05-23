@@ -54,7 +54,6 @@ async def main_async(receiver, tcu, config, logger):
         pass
         
     try:
-        # Proper asyncio waiting instead of blocked loop
         stop_event = asyncio.Event()
         await stop_event.wait()
     finally:
@@ -94,11 +93,13 @@ def setup_hotkeys(tcu: TCULogic, config: ConfigStore, logger: TelemetryLogger):
             except Exception as e:
                 print(f"  [!] hotkey {key} failed: {e}")
 
+
 def banner():
     from virtual_tcu import __version__
     print("=" * 66)
     print(f"  VIRTUAL TCU v{__version__}  —  FH6")
     print("=" * 66)
+
 
 def main():
     if sys.platform != "win32":
@@ -117,7 +118,10 @@ def main():
     receiver = TelemetryReceiver(logger, on_packet=tcu.process)
     if not receiver.start():
         from virtual_tcu.bootstrap import report_fatal
-        report_fatal(f"UDP port {Cfg.UDP_PORT} bind failed.")
+        report_fatal(f"UDP port {Cfg.UDP_PORT} bind failed. {receiver.error_msg}")
+
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     try:
         asyncio.run(main_async(receiver, tcu, config, logger))
