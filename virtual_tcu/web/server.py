@@ -121,7 +121,7 @@ class WebServer:
             )
         elif t == "export_profile":
             export = {
-                "version": "v12",
+                "version": "v12.0.4",
                 "exported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "config": self._config.data,
             }
@@ -184,12 +184,12 @@ class WebServer:
 
             async def _send_safe(client_ws):
                 try:
-                    await client_ws.send_json(payload_tel)
-                    await client_ws.send_json(payload_st)
+                    # Zombi soketlerin yayın hattını kitlemesini engelleyen 50ms agresif timeout
+                    await asyncio.wait_for(client_ws.send_json(payload_tel), timeout=0.05)
+                    await asyncio.wait_for(client_ws.send_json(payload_st), timeout=0.05)
                 except Exception:
                     dead.add(client_ws)
 
-            # Eşzamanlı yayın (Race-free & Lock-free broadcast)
             tasks = [_send_safe(client) for client in self._clients]
             if tasks:
                 await asyncio.gather(*tasks)

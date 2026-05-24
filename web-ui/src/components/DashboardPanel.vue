@@ -1,5 +1,5 @@
 <script setup>
-import { toRefs, computed } from 'vue'
+import { toRefs, computed, ref, watch } from 'vue'
 
 const props = defineProps({
   live: { type: Boolean, required: true },
@@ -51,14 +51,38 @@ const getLedColor = (index, pct) => {
   return 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]'
 }
 
+// MoTeC Style G-Force History Scatter Plot
+const gHistory = ref([])
+const MAX_G = 2.5 // S2/X class hypercar limits
+
+watch(() => telemetry.value, (newT) => {
+  if (!newT || !live.value) return
+  
+  const lat = newT.g_lat || 0
+  const lon = newT.g_lon || 0
+  
+  gHistory.value.push({ lat, lon, id: Date.now() + Math.random() })
+  if (gHistory.value.length > 12) {
+    gHistory.value.shift()
+  }
+}, { deep: true })
+
 const gDotStyle = computed(() => {
-  const maxG = 1.5
-  const x = Math.max(-maxG, Math.min(maxG, gLat.value))
-  const y = Math.max(-maxG, Math.min(maxG, gLon.value))
-  const px = 50 + (x / maxG) * 50
-  const py = 50 - (y / maxG) * 50
+  const x = Math.max(-MAX_G, Math.min(MAX_G, gLat.value))
+  const y = Math.max(-MAX_G, Math.min(MAX_G, gLon.value))
+  const px = 50 + (x / MAX_G) * 50
+  const py = 50 - (y / MAX_G) * 50
   return { left: `${px}%`, top: `${py}%` }
 })
+
+const getTrailStyle = (pt, index) => {
+  const x = Math.max(-MAX_G, Math.min(MAX_G, pt.lat))
+  const y = Math.max(-MAX_G, Math.min(MAX_G, pt.lon))
+  const px = 50 + (x / MAX_G) * 50
+  const py = 50 - (y / MAX_G) * 50
+  const opacity = (index + 1) / 15
+  return { left: `${px}%`, top: `${py}%`, opacity }
+}
 </script>
 
 <template>
@@ -219,12 +243,17 @@ const gDotStyle = computed(() => {
         <div class="bg-[#0a0a0c] border border-[#27272a] rounded-lg p-3 flex flex-col items-center justify-center relative">
           <div class="text-[10px] text-tcu-txt-dim uppercase tracking-widest absolute top-2 left-3">G-Force</div>
           
-          <div class="w-24 h-24 mt-4 rounded-full border-2 border-[#27272a] bg-[#111113] relative">
+          <div class="w-24 h-24 mt-4 rounded-full border-2 border-[#27272a] bg-[#111113] relative overflow-hidden">
             <div class="absolute top-1/2 left-0 w-full h-[1px] bg-[#27272a]"></div>
             <div class="absolute top-0 left-1/2 w-[1px] h-full bg-[#27272a]"></div>
             <div class="absolute top-[25%] left-[25%] w-1/2 h-1/2 rounded-full border border-[#27272a]/50"></div>
             
-            <div class="absolute w-3 h-3 bg-yellow-400 rounded-full shadow-[0_0_8px_rgba(250,204,21,0.8)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-75"
+            <div v-for="(pt, i) in gHistory" :key="pt.id"
+                 class="absolute w-2 h-2 bg-yellow-400 rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-none pointer-events-none"
+                 :style="getTrailStyle(pt, i)">
+            </div>
+            
+            <div class="absolute w-3 h-3 bg-yellow-400 rounded-full shadow-[0_0_8px_rgba(250,204,21,0.8)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-75 z-10"
                  :style="gDotStyle">
             </div>
           </div>

@@ -2,6 +2,7 @@ import socket
 import select
 import threading
 import time
+import queue
 from typing import Optional
 
 from virtual_tcu.config.constants import Cfg
@@ -14,7 +15,8 @@ class TelemetryReceiver:
     def __init__(self, logger: TelemetryLogger, on_packet=None):
         self._sock: Optional[socket.socket] = None
         self._running = threading.Event()
-        self._thread: Optional[threading.Thread] = None
+        self._udp_thread: Optional[threading.Thread] = None
+        self._worker_thread: Optional[threading.Thread] = None
         self._latest: Optional[Telemetry] = None
         self._latest_raw: Optional[bytes] = None
         self._lock = threading.Lock()
@@ -23,6 +25,9 @@ class TelemetryReceiver:
         self.packets_total = 0
         self.last_recv_time = 0.0
         self.error_msg = ""
+        
+        # O(1) Thread-safe kuyruk. Ağ ve İş mantığını birbirinden ayırır.
+        self._packet_queue = queue.Queue(maxsize=120)
 
     def start(self) -> bool:
         if self._running.is_set():
@@ -37,14 +42,25 @@ class TelemetryReceiver:
             return False
             
         self._running.set()
-        self._thread = threading.Thread(target=self._loop, daemon=True, name="UDP_Receiver")
-        self._thread.start()
+        self._udp_thread = threading.Thread(target=self._udp_loop, daemon=True, name="UDP_Ingest")
+        self._worker_thread = threading.Thread(target=self._worker_loop, daemon=True, name="UDP_Worker")
+        self._udp_thread.start()
+        self._worker_thread.start()
         return True
 
     def stop(self):
         self._running.clear()
-        if self._thread is not None and self._thread.is_alive():
-            self._thread.join(timeout=1.0)
+        
+        try:
+            self._packet_queue.put_nowait(None)  # Sentinel to unblock worker
+        except queue.Full:
+            pass
+            
+        if self._udp_thread is not None and self._udp_thread.is_alive():
+            self._udp_thread.join(timeout=1.0)
+        if self._worker_thread is not None and self._worker_thread.is_alive():
+            self._worker_thread.join(timeout=1.0)
+            
         if self._sock:
             try:
                 self._sock.close()
@@ -52,20 +68,44 @@ class TelemetryReceiver:
                 pass
             self._sock = None
 
-    def _loop(self):
+    def _udp_loop(self):
         while self._running.is_set():
             try:
                 if self._sock is None:
                     break
                     
-                # Timeout eklenerek thread interruptible hale getirildi.
                 ready = select.select([self._sock], [], [], 0.5)
                 if not ready[0]:
                     continue
 
                 raw, _ = self._sock.recvfrom(1024)
-                td = parse_fh6_packet(raw)
                 
+                try:
+                    self._packet_queue.put_nowait(raw)
+                except queue.Full:
+                    # Kuyruk dolarsa en eski paketi düşür, gerçek zamanlı hissi koru
+                    try:
+                        self._packet_queue.get_nowait()
+                        self._packet_queue.put_nowait(raw)
+                    except queue.Empty:
+                        pass
+                        
+            except OSError:
+                if not self._running.is_set():
+                    break
+                time.sleep(0.01)
+            except Exception as e:
+                print(f"[UDP] Ingest error: {e}")
+                time.sleep(0.01)
+
+    def _worker_loop(self):
+        while self._running.is_set():
+            try:
+                raw = self._packet_queue.get(timeout=0.5)
+                if raw is None:
+                    continue
+                    
+                td = parse_fh6_packet(raw)
                 if td is not None:
                     now = time.time()
                     with self._lock:
@@ -75,16 +115,18 @@ class TelemetryReceiver:
                         self._latest_raw = raw
                     
                     self._logger.write_packet(raw)
+                    
                     if self.on_packet:
-                        self.on_packet(td, raw)
-                        
-            except OSError:
-                if not self._running.is_set():
-                    break  # Kasıtlı shutdown durumunda fail silent
-                time.sleep(0.01)
+                        try:
+                            self.on_packet(td, raw)
+                        except Exception as e:
+                            print(f"[TCU] Processing Error: {e}")
+                            
+                self._packet_queue.task_done()
+            except queue.Empty:
+                continue
             except Exception as e:
-                print(f"[UDP] Error in receiver loop: {e}")
-                time.sleep(0.01)
+                print(f"[UDP] Worker Error: {e}")
 
     def latest(self) -> Optional[Telemetry]:
         with self._lock:
