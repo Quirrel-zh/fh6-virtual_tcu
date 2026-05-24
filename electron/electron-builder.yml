@@ -1,0 +1,48 @@
+appId: com.virtualtcu.app
+productName: VirtualTCU
+copyright: Copyright (c) 2026 Virtual TCU
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+
+# Bundle the PyInstaller onedir output (built outside this directory) as
+# extraResources/backend/VirtualTCU.exe. The Electron main process spawns it
+# with --backend-only at startup.
+extraResources:
+  - from: ../dist/VirtualTCU
+    to: backend
+    filter:
+      - "**/*"
+
+asar: true
+asarUnpack: []
+
+win:
+  target:
+    - target: nsis
+      arch: x64
+    - target: zip
+      arch: x64
+  artifactName: ${productName}-${version}-win64.${ext}
+  requestedExecutionLevel: requireAdministrator
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: VirtualTCU
+
+publish:
+  - provider: github
+    owner: f2iclo
+    repo: fh6-virtual_tcu
+    releaseType: release

@@ -6,11 +6,13 @@
     SETTING_GROUPS,
     SHIFT_KEY_FIELDS,
   } from '@/config/settings'
+  import { useNetworkSettings } from './network-settings'
   import {
     actionBtn,
     actionBtnCompact,
     actionBtnDanger,
     col,
+    hotkeyInput,
     sectionTitle,
     statRow,
     tabActive,
@@ -28,10 +30,14 @@
     sessionStats: { type: Object, default: null },
     shiftHistory: { type: Array, default: () => [] },
     watchdogStuck: { type: Boolean, default: false },
+    visibleTabs: { type: Array, default: () => TAB_IDS },
+    initialTab: { type: String, default: '' },
+    hideTabBar: { type: Boolean, default: false },
   })
-  const emit = defineEmits(['setConfig', 'resetConfig', 'exportProfile', 'openImport'])
+  const emit = defineEmits(['setConfig', 'applyNetwork', 'resetConfig', 'exportProfile', 'openImport'])
 
-  const { config, telemetry, sessionStats, shiftHistory, watchdogStuck } = toRefs(props)
+  const { config, telemetry, sessionStats, shiftHistory, watchdogStuck, visibleTabs } =
+    toRefs(props)
 
   const { activeTab, slidersFor, statsRows, historyItems, configValue, configBool, sliderDef } =
     useSettingsPanel(
@@ -41,14 +47,36 @@
       () => shiftHistory.value,
     )
 
+  if (props.initialTab && (props.visibleTabs ?? TAB_IDS).includes(props.initialTab)) {
+    activeTab.value = props.initialTab
+  }
+  else if (props.visibleTabs?.length && !props.visibleTabs.includes(activeTab.value)) {
+    activeTab.value = props.visibleTabs[0]
+  }
+
   const extrasSliders = computed(() => slidersFor('extras'))
+
+  const {
+    draftHost: networkDraftHost,
+    draftWebPort: networkDraftWebPort,
+    draftUdpPort: networkDraftUdpPort,
+    dirty: networkDirty,
+    applyError: networkApplyError,
+    validate: validateNetwork,
+  } = useNetworkSettings(() => config.value)
+
+  function applyNetworkSettings() {
+    const parsed = validateNetwork()
+    if (parsed)
+      emit('applyNetwork', parsed.host, parsed.webPort, parsed.udpPort)
+  }
 </script>
 
 <template>
   <div :class="col">
-    <div class="border-tcu-border mb-4 flex gap-1 border-b">
+    <div v-if="!hideTabBar" class="border-tcu-border mb-4 flex gap-1 border-b">
       <button
-        v-for="tab in TAB_IDS"
+        v-for="tab in visibleTabs"
         :key="tab"
         type="button"
         :class="[tabBase, activeTab === tab && tabActive]"
@@ -230,6 +258,64 @@
 
     <div v-show="activeTab === 'extras'">
       <h3 :class="sectionTitle">
+        {{ $t('extras.networkTitle') }}
+      </h3>
+      <p class="text-tcu-txt-dim mb-2 text-[11px] leading-snug">
+        {{ $t('extras.networkHint') }}
+      </p>
+      <div class="grid grid-cols-[1fr_auto] items-center gap-2 py-1.5">
+        <span class="text-tcu-txt-muted text-xs">{{ $t('extras.webHost') }}</span>
+        <input
+          v-model="networkDraftHost"
+          type="text"
+          :class="hotkeyInput"
+          maxlength="15"
+          placeholder="0.0.0.0"
+          spellcheck="false"
+          autocomplete="off"
+        >
+      </div>
+      <div class="grid grid-cols-[1fr_auto] items-center gap-2 py-1.5">
+        <span class="text-tcu-txt-muted text-xs">{{ $t('extras.webPort') }}</span>
+        <input
+          v-model="networkDraftWebPort"
+          type="text"
+          :class="hotkeyInput"
+          maxlength="5"
+          placeholder="8765"
+          spellcheck="false"
+          autocomplete="off"
+        >
+      </div>
+      <div class="grid grid-cols-[1fr_auto] items-center gap-2 py-1.5">
+        <span class="text-tcu-txt-muted text-xs">{{ $t('extras.udpPort') }}</span>
+        <input
+          v-model="networkDraftUdpPort"
+          type="text"
+          :class="hotkeyInput"
+          maxlength="5"
+          placeholder="5555"
+          spellcheck="false"
+          autocomplete="off"
+        >
+      </div>
+      <p class="text-tcu-txt-dim mb-2 text-[10px] leading-snug">
+        {{ $t('extras.udpPortHint') }}
+      </p>
+      <div class="mt-2 flex items-center gap-2">
+        <button
+          type="button"
+          :class="[actionBtn, actionBtnCompact, !networkDirty && 'opacity-50']"
+          :disabled="!networkDirty"
+          @click="applyNetworkSettings"
+        >
+          {{ $t('extras.networkApply') }}
+        </button>
+        <span v-if="networkApplyError" class="text-warn text-[10px]">
+          {{ $t(`extras.networkErrors.${networkApplyError}`) }}
+        </span>
+      </div>
+      <h3 class="mt-6" :class="[sectionTitle]">
         {{ $t('extras.profileTitle') }}
       </h3>
       <p class="text-tcu-txt-dim mb-2 text-[11px] leading-snug">

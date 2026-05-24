@@ -20,9 +20,11 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: web-ui/package-lock.json
+          cache-dependency-path: |
+            web-ui/package-lock.json
+            electron/package-lock.json
 
-      - name: Build Web UI
+      - name: Build Web UI (Vue dashboard)
         working-directory: web-ui
         run: |
           npm ci
@@ -39,10 +41,25 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: PyInstaller (onedir)
+      - name: Build Python backend (PyInstaller onedir)
         run: pyinstaller virtual_tcu.spec --noconfirm
+        # Output: dist/VirtualTCU/VirtualTCU.exe (consumed by electron-builder
+        # via extraResources)
 
-      - name: Create zip archive
+      - name: Install Electron shell deps
+        working-directory: electron
+        run: npm ci
+
+      - name: Build & package Electron shell (NSIS + zip)
+        working-directory: electron
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run package
+        # electron-builder bundles ../dist/VirtualTCU as resources/backend
+        # and emits release/VirtualTCU-<version>-win64.{exe,zip} plus
+        # latest.yml for electron-updater.
+
+      - name: Stage backend-only zip (legacy, no Electron)
         shell: pwsh
         run: |
           $version = "${{ github.ref_name }}".TrimStart('v')
@@ -50,10 +67,14 @@ jobs:
           New-Item -ItemType Directory -Force -Path "$stage/VirtualTCU" | Out-Null
           Copy-Item -Recurse -Force "dist/VirtualTCU/*" "$stage/VirtualTCU/"
           Copy-Item -Force "packaging/Launch VirtualTCU.bat" "$stage/"
-          Compress-Archive -Path "$stage/*" -DestinationPath "VirtualTCU-$version-win64.zip" -Force
+          Compress-Archive -Path "$stage/*" -DestinationPath "VirtualTCU-Backend-$version-win64.zip" -Force
 
-      - name: Upload release asset
+      - name: Upload release assets
         uses: softprops/action-gh-release@v3
         with:
-          files: VirtualTCU-*.zip
+          files: |
+            electron/release/VirtualTCU-*-win64.exe
+            electron/release/VirtualTCU-*-win64.zip
+            electron/release/latest.yml
+            VirtualTCU-Backend-*-win64.zip
           generate_release_notes: true

@@ -1,0 +1,55 @@
+/* Minimal global reset for the Naive UI settings window.
+   Naive UI ships scoped CSS-in-JS so we keep this file intentionally small. */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: #1f2937;
+  background: #f3f5f9;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+html,
+body {
+  overflow: hidden;
+}
+
+/* Reserve scrollbar space so the layout doesn't shift when content height changes
+   between tabs. */
+.n-tab-pane {
+  scrollbar-gutter: stable;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

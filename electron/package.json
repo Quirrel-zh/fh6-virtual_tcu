@@ -1,0 +1,42 @@
+{
+  "name": "virtual-tcu",
+  "productName": "VirtualTCU",
+  "version": "13.0.0",
+  "description": "External adaptive transmission controller for Forza Horizon 6 — Electron shell",
+  "main": "out/main/index.js",
+  "author": "Virtual TCU",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/f2iclo/fh6-virtual_tcu.git"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "package": "electron-vite build && electron-builder --win --publish never",
+    "release": "electron-vite build && electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "@electron-toolkit/utils": "^4.0.0",
+    "@vicons/ionicons5": "^0.13.0",
+    "electron-updater": "^6.3.9",
+    "naive-ui": "^2.44.1",
+    "vue": "^3.5.13",
+    "vue-i18n": "^11.1.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.3",
+    "@types/node": "^22.10.0",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "tailwindcss": "^4.1.3",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vue-tsc": "^2.2.0"
+  }
+}

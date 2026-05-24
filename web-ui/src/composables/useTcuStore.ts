@@ -1,9 +1,34 @@
 import type { LogStatus, ShiftHistoryItem, TelemetrySnapshot } from '@/types/telemetry'
-import type { ConfigMap, DriveMode, WsInbound } from '@/types/ws'
+import type { ConfigMap, DriveMode, WebUrls, WsInbound } from '@/types/ws'
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { TcuWsClient } from '@/api/ws-client'
 
 const client = new TcuWsClient()
+
+interface BackendInfo {
+  wsUrl?: string
+}
+
+async function resolveElectronWsUrl(): Promise<string | null> {
+  const w = window as {
+    isElectron?: boolean
+    tcu?: { getBackendInfo: () => Promise<BackendInfo> }
+  }
+  if (!w.isElectron || !w.tcu?.getBackendInfo)
+    return null
+  try {
+    const info = await w.tcu.getBackendInfo()
+    return info.wsUrl ?? null
+  }
+  catch {
+    return null
+  }
+}
+
+function wsUrlFromWebUrls(info: WebUrls): string {
+  const host = info.bind_host === '0.0.0.0' ? '127.0.0.1' : info.bind_host
+  return `ws://${host}:${info.port}/ws`
+}
 
 export function useTcuStore() {
   const connected = ref(false)
@@ -16,6 +41,8 @@ export function useTcuStore() {
   const logStatus = ref<LogStatus | null>(null)
   const shiftHistory = ref<ShiftHistoryItem[]>([])
   const watchdogStuck = ref(false)
+  const webUrls = ref<WebUrls | null>(null)
+  const webBindStatus = ref<{ ok: boolean, error?: string } | null>(null)
 
   const modal = reactive({
     open: false,
@@ -34,6 +61,7 @@ export function useTcuStore() {
         shiftCount.value = msg.data.shift_count
         packetsTotal.value = msg.data.packets_total
         logStatus.value = msg.data.log_status
+        webUrls.value = msg.data.web_urls ?? null
         connected.value = true
         break
       case 'telemetry':
@@ -70,6 +98,18 @@ export function useTcuStore() {
           Object.assign(config, msg.data)
         }
         break
+      case 'web_bind_changed':
+      case 'network_changed':
+        webBindStatus.value = { ok: msg.ok !== false, error: msg.error }
+        webUrls.value = msg.data
+        if (msg.ok !== false) {
+          config.web_host = msg.data.bind_host
+          config.web_port = msg.data.port
+          if (msg.data.udp_port !== undefined)
+            config.udp_port = msg.data.udp_port
+          client.setUrl(wsUrlFromWebUrls(msg.data))
+        }
+        break
     }
   }
 
@@ -82,8 +122,18 @@ export function useTcuStore() {
   }
 
   function setConfig(key: string, value: string | number | boolean) {
+    if (key === 'web_host' || key === 'web_port' || key === 'udp_port')
+      return
     send({ type: 'set_config', key, value })
     config[key] = value
+  }
+
+  function applyNetwork(host: string, webPort: number, udpPort: number) {
+    send({ type: 'set_network', web_host: host, web_port: webPort, udp_port: udpPort })
+  }
+
+  function applyWebBind(host: string, port: number) {
+    applyNetwork(host, port, Number(config.udp_port ?? 5555))
   }
 
   function resetConfig() {
@@ -133,19 +183,47 @@ export function useTcuStore() {
     return live.value ? 'live' : 'standby'
   })
 
-  let pollId: ReturnType<typeof setInterval> | null = null
+  let cleanupBackendReady: (() => void) | null = null
+  let cleanupBackendExit: (() => void) | null = null
 
-  onMounted(() => {
-    client.onMessage(handle)
+  async function connectToBackend(wsUrl?: string) {
+    const url = wsUrl ?? await resolveElectronWsUrl() ?? TcuWsClient.defaultUrl()
+    client.setUrl(url)
     client.connect()
-    pollId = setInterval(() => {
-      connected.value = client.connected
-    }, 500)
+  }
+
+  onMounted(async () => {
+    client.onMessage(handle)
+    client.onConnectionChange((open) => {
+      if (!open) {
+        connected.value = false
+        live.value = false
+      }
+    })
+    await connectToBackend()
+
+    const tcu = (window as { tcu?: {
+      onBackendReady?: (cb: (info: BackendInfo) => void) => () => void
+      onBackendExit?: (cb: (info: unknown) => void) => () => void
+    } }).tcu
+
+    if (tcu?.onBackendReady) {
+      cleanupBackendReady = tcu.onBackendReady((info) => {
+        if (info.wsUrl)
+          void connectToBackend(info.wsUrl)
+      })
+    }
+    if (tcu?.onBackendExit) {
+      cleanupBackendExit = tcu.onBackendExit(() => {
+        connected.value = false
+        live.value = false
+      })
+    }
   })
 
   onUnmounted(() => {
-    if (pollId)
-      clearInterval(pollId)
+    cleanupBackendReady?.()
+    cleanupBackendExit?.()
     client.disconnect()
   })
 
@@ -160,12 +238,16 @@ export function useTcuStore() {
     logStatus,
     shiftHistory,
     watchdogStuck,
+    webUrls,
+    webBindStatus,
     sessionStats,
     connectionLabel,
     modal,
     send,
     setMode,
     setConfig,
+    applyWebBind,
+    applyNetwork,
     resetConfig,
     openModal,
     closeModal,

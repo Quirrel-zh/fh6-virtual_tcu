@@ -62,4 +62,7 @@ DEFAULTS = {
     "shift_key_up": "e",
     "shift_key_down": "q",
     "current_mode": "COMFORT",
+    "web_host": "127.0.0.1",
+    "web_port": 8765,
+    "udp_port": 5555,
 }

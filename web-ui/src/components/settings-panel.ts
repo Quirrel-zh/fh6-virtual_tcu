@@ -5,21 +5,21 @@ import { SETTING_SLIDERS } from '@/config/settings'
 import { formatDuration } from '@/utils/format'
 
 export const TAB_IDS = ['settings', 'stats', 'history', 'extras'] as const
+export const CONFIG_TAB_IDS = ['settings', 'extras'] as const
 
 export function hotkeyInputValue(event: Event): string {
   const el = event.target
-  if (el instanceof HTMLInputElement)
-    return el.value.trim().toLowerCase()
+  if (el instanceof HTMLInputElement) return el.value.trim().toLowerCase()
   return ''
 }
 export type TabId = (typeof TAB_IDS)[number]
 
 function isShiftHistoryItem(h: unknown): h is ShiftHistoryItem {
   return (
-    !!h
-    && typeof h === 'object'
-    && 'action' in h
-    && typeof (h as ShiftHistoryItem).action === 'string'
+    !!h &&
+    typeof h === 'object' &&
+    'action' in h &&
+    typeof (h as ShiftHistoryItem).action === 'string'
   )
 }
 
@@ -32,13 +32,12 @@ export function useSettingsPanel(
   const activeTab = ref<TabId>('settings')
 
   const slidersFor = (panel: 'settings' | 'extras') =>
-    SETTING_SLIDERS.filter(s => (s.panel ?? 'settings') === panel)
+    SETTING_SLIDERS.filter((s) => (s.panel ?? 'settings') === panel)
 
   const statsRows = computed(() => {
     const s = sessionStats()
     const t = telemetry()
-    if (!s)
-      return null
+    if (!s) return null
     return {
       duration: formatDuration(s.duration_s || 0),
       total: s.upshifts + s.downshifts,
@@ -60,16 +59,12 @@ export function useSettingsPanel(
     }
   })
 
-  const historyItems = computed(() =>
-    [...shiftHistory()].reverse().filter(isShiftHistoryItem),
-  )
+  const historyItems = computed(() => [...shiftHistory()].reverse().filter(isShiftHistoryItem))
 
   function configValue(key: string) {
     const v = config()[key]
-    if (typeof v === 'number')
-      return v
-    if (typeof v === 'boolean')
-      return v ? 1 : 0
+    if (typeof v === 'number') return v
+    if (typeof v === 'boolean') return v ? 1 : 0
     return Number(v) || 0
   }
 
@@ -82,7 +77,7 @@ export function useSettingsPanel(
   }
 
   function sliderDef(key: string) {
-    return SETTING_SLIDERS.find(s => s.key === key)
+    return SETTING_SLIDERS.find((s) => s.key === key)
   }
 
   return {

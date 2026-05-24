@@ -70,6 +70,11 @@ export const SHIFT_KEY_FIELDS = [
   { key: 'shift_key_down', i18nKey: 'shiftKeyDown', placeholder: 'q' },
 ] as const
 
+export const NETWORK_FIELDS = [
+  { key: 'web_host', i18nKey: 'webHost', placeholder: '0.0.0.0', maxlength: 15 },
+  { key: 'web_port', i18nKey: 'webPort', placeholder: '8765', maxlength: 5 },
+] as const
+
 export const SETTING_GROUPS: { i18nKey: string, keys: string[], hintKey?: string }[] = [
   { i18nKey: 'launchControl', keys: ['launch_rpm'] },
   { i18nKey: 'comfort', keys: ['comfort_up_wot'] },

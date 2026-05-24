@@ -1,8 +1,11 @@
 import type { ConfigMap } from '@/types/ws'
 import { ref, watch } from 'vue'
 
-export function normalizeConfigText(value: string): string {
-  return value.trim().toLowerCase()
+export function normalizeConfigText(value: string, key?: string): string {
+  const trimmed = value.trim()
+  if (key === 'web_host' || key === 'web_port')
+    return trimmed
+  return trimmed.toLowerCase()
 }
 
 export function useConfigTextInput(
@@ -34,7 +37,7 @@ export function useConfigTextInput(
 
   function commit() {
     focused = false
-    onCommit(configKey(), normalizeConfigText(draft.value))
+    onCommit(configKey(), normalizeConfigText(draft.value, configKey()))
   }
 
   return { draft, onFocus, onInput, commit }

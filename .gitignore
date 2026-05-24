@@ -43,6 +43,11 @@ logs/
 /VirtualTCU.exe
 *.spec.bak
 
+# ── Electron shell ─────────────────────────────────────────────────────
+electron/node_modules/
+electron/out/
+electron/release/
+
 # ── IDE & OS ───────────────────────────────────────────────────────────
 #.vscode/
 .idea/

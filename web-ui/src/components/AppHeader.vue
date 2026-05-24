@@ -7,6 +7,7 @@ import LocaleSwitcher from './LocaleSwitcher.vue'
 const props = defineProps(headerProps)
 const { connected, live, mode } = toRefs(props)
 const connectionKey = useHeaderConnectionKey(connected, live)
+const appVersion = `v${__APP_VERSION__}`
 </script>
 
 <template>
@@ -15,7 +16,7 @@ const connectionKey = useHeaderConnectionKey(connected, live)
   >
     <div class="text-xl font-bold tracking-tight">
       {{ $t('app.title') }}
-      <span class="ml-2 text-sm font-normal text-tcu-txt-dim">{{ $t('app.version') }}</span>
+      <span class="ml-2 text-sm font-normal text-tcu-txt-dim">{{ appVersion }}</span>
       <span
         class="ml-3.5 inline-block rounded-full border px-3 py-1 text-[11px] font-bold tracking-widest max-[700px]:hidden"
         :class="MODE_PILL[mode] ?? MODE_PILL.COMFORT"
