@@ -18,6 +18,30 @@ class ConfigStore:
         try:
             stored = json.loads(self.path.read_text())
             new_keys_added = False
+            
+            # Migration logic
+            migrations = {
+                "comfort_up_idle": "daily_up_idle",
+                "comfort_up_mid": "daily_up_mid",
+                "comfort_up_wot": "daily_up_wot",
+                "dynamic_up_idle": "track_up_idle",
+                "dynamic_up_mid": "track_up_mid",
+                "race_up_wot": "track_up_wot",
+                "offroad_up_idle": "mud_up_idle",
+                "offroad_up_mid": "mud_up_mid",
+                "offroad_up_wot": "mud_up_wot",
+                "offroad_down_rpm": "mud_down_rpm",
+            }
+            for old_k, new_k in migrations.items():
+                if old_k in stored and new_k not in stored:
+                    stored[new_k] = stored[old_k]
+                    new_keys_added = True
+            
+            from virtual_tcu.core.mode import LEGACY_MODE_MAP
+            if "current_mode" in stored and stored["current_mode"] in LEGACY_MODE_MAP:
+                stored["current_mode"] = LEGACY_MODE_MAP[stored["current_mode"]]
+                new_keys_added = True
+
             for k, default_v in DEFAULTS.items():
                 if k not in stored:
                     new_keys_added = True

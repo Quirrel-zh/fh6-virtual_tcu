@@ -33,31 +33,26 @@ export interface SliderDef {
 
 export const SETTING_SLIDERS: SliderDef[] = [
   { key: 'launch_rpm', i18nKey: 'launchRpm', min: 2000, max: 8000, step: 100, unit: 'rpm', panel: 'settings' },
-  { key: 'comfort_up_wot', i18nKey: 'comfortUpWot', min: 50, max: 95, panel: 'settings' },
-  { key: 'dynamic_up_wot', i18nKey: 'dynamicUpWot', min: 60, max: 98, panel: 'settings' },
+  { key: 'daily_up_wot', i18nKey: 'dailyUpWot', min: 50, max: 95, panel: 'settings' },
   {
-    key: 'race_up_wot',
-    i18nKey: 'raceUpWot',
+    key: 'track_up_wot',
+    i18nKey: 'trackUpWot',
     min: 70,
     max: 99,
     panel: 'settings',
-    hintKey: 'raceFallbackHint',
+    hintKey: 'trackFallbackHint',
   },
-  { key: 'offroad_up_wot', i18nKey: 'offroadUpWot', min: 75, max: 98, panel: 'settings' },
-  { key: 'offroad_down_rpm', i18nKey: 'offroadDownRpm', min: 35, max: 70, panel: 'settings' },
+  { key: 'mud_up_wot', i18nKey: 'mudUpWot', min: 75, max: 98, panel: 'settings' },
+  { key: 'mud_down_rpm', i18nKey: 'mudDownRpm', min: 35, max: 70, panel: 'settings' },
   { key: 'brake_thr', i18nKey: 'brakeThr', min: 20, max: 80, panel: 'settings' },
   { key: 'cornering_yaw', i18nKey: 'corneringYaw', min: 10, max: 50, unit: 'raw', panel: 'settings' },
-  { key: 'comfort_up_idle', i18nKey: 'comfortUpIdle', min: 20, max: 70, panel: 'extras' },
-  { key: 'comfort_up_mid', i18nKey: 'comfortUpMid', min: 30, max: 85, panel: 'extras' },
-  { key: 'dynamic_up_idle', i18nKey: 'dynamicUpIdle', min: 30, max: 80, panel: 'extras' },
-  { key: 'dynamic_up_mid', i18nKey: 'dynamicUpMid', min: 40, max: 90, panel: 'extras' },
-  { key: 'race_up_idle', i18nKey: 'raceUpIdle', min: 40, max: 90, panel: 'extras' },
-  { key: 'race_up_mid', i18nKey: 'raceUpMid', min: 50, max: 95, panel: 'extras' },
+  { key: 'daily_up_idle', i18nKey: 'dailyUpIdle', min: 20, max: 70, panel: 'extras' },
+  { key: 'daily_up_mid', i18nKey: 'dailyUpMid', min: 30, max: 85, panel: 'extras' },
+  { key: 'track_up_idle', i18nKey: 'trackUpIdle', min: 40, max: 90, panel: 'extras' },
+  { key: 'track_up_mid', i18nKey: 'trackUpMid', min: 50, max: 95, panel: 'extras' },
   { key: 'kickdown_pedal', i18nKey: 'kickdownPedal', min: 50, max: 100, panel: 'extras' },
   { key: 'kickdown_rpm', i18nKey: 'kickdownRpm', min: 30, max: 80, panel: 'extras' },
   { key: 'coast_down_rpm', i18nKey: 'coastDownRpm', min: 10, max: 50, panel: 'extras' },
-  { key: 'drift_up', i18nKey: 'driftUp', min: 70, max: 99, panel: 'extras' },
-  { key: 'drift_down', i18nKey: 'driftDown', min: 40, max: 85, panel: 'extras' },
 ]
 
 export const HOTKEY_FIELDS = [
@@ -72,9 +67,8 @@ export const SHIFT_KEY_FIELDS = [
 
 export const SETTING_GROUPS: { i18nKey: string, keys: string[], hintKey?: string }[] = [
   { i18nKey: 'launchControl', keys: ['launch_rpm'] },
-  { i18nKey: 'comfort', keys: ['comfort_up_wot'] },
-  { i18nKey: 'dynamic', keys: ['dynamic_up_wot'] },
-  { i18nKey: 'race', keys: ['race_up_wot'], hintKey: 'raceFallbackHint' },
-  { i18nKey: 'offroad', keys: ['offroad_up_wot', 'offroad_down_rpm'] },
+  { i18nKey: 'daily', keys: ['daily_up_wot'] },
+  { i18nKey: 'track', keys: ['track_up_wot'], hintKey: 'trackFallbackHint' },
+  { i18nKey: 'mud', keys: ['mud_up_wot', 'mud_down_rpm'] },
   { i18nKey: 'common', keys: ['brake_thr', 'cornering_yaw'] },
 ]

@@ -47,10 +47,10 @@ class TCULogic:
         self._audio_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="TCU_Audio")
 
         try:
-            self._mode = Mode(config.get("current_mode", "COMFORT"))
+            self._mode = Mode(config.get("current_mode", "DAILY"))
         except ValueError:
-            self._mode = Mode.COMFORT
-        self._last_auto_mode = self._mode if self._mode != Mode.MANUAL else Mode.COMFORT
+            self._mode = Mode.DAILY
+        self._last_auto_mode = self._mode if self._mode != Mode.MANUAL else Mode.DAILY
         self._last_processed_mode = self._mode
 
         self._lock_until = 0.0
@@ -447,16 +447,12 @@ class TCULogic:
             self._tcu_state_sub = "upshift locked"
 
         m = self.mode
-        if m == Mode.COMFORT:
-            self._mode_comfort(td, now)
-        elif m == Mode.DYNAMIC:
-            self._mode_dynamic(td, now)
-        elif m == Mode.RACE:
-            self._mode_race(td, now)
-        elif m == Mode.DRIFT:
-            self._mode_drift(td, now)
-        elif m == Mode.OFFROAD:
-            self._mode_offroad(td, now)
+        if m == Mode.DAILY:
+            self._mode_daily(td, now)
+        elif m == Mode.TRACK:
+            self._mode_track(td, now)
+        elif m == Mode.MUD:
+            self._mode_mud(td, now)
 
     def _shift_up(self, td: Telemetry, lock_ms: int, state: str, sub: str = "") -> bool:
         if td.gear >= 10:
@@ -883,6 +879,8 @@ class TCULogic:
         return min(best_gear, td.gear)
 
     def _is_spinning_not_traction(self, td: Telemetry) -> bool:
+        if td.gear <= 2:
+            return False
         if td.rear_slip < 1.2:
             return False
         if td.rpm_pct < 0.65:
@@ -894,7 +892,7 @@ class TCULogic:
         new = sum(recent[-3:]) / 3
         return (new - old) < 0.5
 
-    def _mode_comfort(self, td: Telemetry, now: float):
+    def _mode_daily(self, td: Telemetry, now: float):
         thr = td.throttle
         brake_thr = self._config.get("brake_thr", 35) / 100
         kd_pedal = self._config.get("kickdown_pedal", 78) / 100
@@ -960,9 +958,9 @@ class TCULogic:
         ):
             up_pct = self._curve(
                 thr,
-                self._config.get("comfort_up_idle", 40) / 100,
-                self._config.get("comfort_up_mid", 58) / 100,
-                self._config.get("comfort_up_wot", 82) / 100,
+                self._config.get("daily_up_idle", 40) / 100,
+                self._config.get("daily_up_mid", 58) / 100,
+                self._config.get("daily_up_wot", 82) / 100,
             )
             if td.rpm_pct >= up_pct:
                 self._shift_up(td, 350, "UPSHIFT", "accelerating")
@@ -994,42 +992,7 @@ class TCULogic:
         self._tcu_state = "CRUISING"
         self._tcu_state_sub = ""
 
-    def _mode_race(self, td: Telemetry, now: float):
-        thr = td.throttle
-        brake_thr = self._config.get("brake_thr", 35) / 100 * 0.6
-
-        if (
-            td.current_rpm < Cfg.ANTI_STALL_RPM
-            and td.gear > 1
-            and thr < 0.10
-            and td.speed_kmh < 20.0
-        ):
-            self._shift_down(td, 350, "ANTI-STALL", "engine save")
-            return
-
-        blocker = self._blocked_by_transient()
-        if blocker is not None:
-            self._tcu_state = blocker
-            self._tcu_state_sub = "holding decisions"
-            return
-
-        if self._track_brake_down(td, now, brake_thr, lock_ms=250):
-            return
-
-        if self._wheelspin_upshift_now(td) and td.speed_kmh > 15.0:
-            self._shift_up(td, 400, "WHEELSPIN", "traction save")
-            return
-
-        if self._track_out_of_band_kickdown(td, now, climb_only=True):
-            return
-
-        if self._track_upshift_in_band(td, now, offset=0.03):
-            return
-
-        self._tcu_state = "RACE"
-        self._tcu_state_sub = "in band"
-
-    def _mode_dynamic(self, td: Telemetry, now: float):
+    def _mode_track(self, td: Telemetry, now: float):
         if (
             td.current_rpm < Cfg.ANTI_STALL_RPM
             and td.gear > 1
@@ -1040,36 +1003,35 @@ class TCULogic:
             return
 
         regime = self._drive_style.regime
-        if regime == "SPORT":
-            self._dynamic_sport(td, now)
-        else:
-            self._dynamic_cruise(td, now, adaptive=(regime == "ADAPTIVE"))
-
-    def _dynamic_sport(self, td: Telemetry, now: float):
-        brake_thr = self._config.get("brake_thr", 35) / 100 * 0.7
-        blocker = self._blocked_by_transient()
-        if blocker is not None:
-            self._tcu_state = blocker
-            self._tcu_state_sub = "sport — hold"
-            return
-
-        if self._track_brake_down(td, now, brake_thr, lock_ms=280):
-            return
-        if self._wheelspin_upshift_now(td) and td.speed_kmh > 15.0:
-            self._shift_up(td, 400, "WHEELSPIN", "traction save")
-            return
-        if self._track_out_of_band_kickdown(td, now, climb_only=True):
-            return
-        if self._track_upshift_in_band(td, now, offset=0.05):
-            return
-        self._tcu_state = "DYNAMIC"
-        self._tcu_state_sub = "sport — in band"
-
-    def _dynamic_cruise(self, td: Telemetry, now: float, adaptive: bool):
         thr = td.throttle
-        brake_thr = self._config.get("brake_thr", 35) / 100 * 0.9
         kd_pedal = self._config.get("kickdown_pedal", 78) / 100
         kd_rpm = self._config.get("kickdown_rpm", 50) / 100
+
+        if regime == "SPORT":
+            # RACE logic
+            brake_thr = self._config.get("brake_thr", 35) / 100 * 0.6
+            blocker = self._blocked_by_transient()
+            if blocker is not None:
+                self._tcu_state = blocker
+                self._tcu_state_sub = "sport — hold"
+                return
+
+            if self._track_brake_down(td, now, brake_thr, lock_ms=250):
+                return
+            if self._wheelspin_upshift_now(td) and td.speed_kmh > 15.0:
+                self._shift_up(td, 400, "WHEELSPIN", "traction save")
+                return
+            if self._track_out_of_band_kickdown(td, now, climb_only=True):
+                return
+            if self._track_upshift_in_band(td, now, offset=0.03):
+                return
+            self._tcu_state = "TRACK"
+            self._tcu_state_sub = "sport — in band"
+            return
+            
+        # CRUISE / ADAPTIVE logic (DYNAMIC logic)
+        adaptive = (regime == "ADAPTIVE")
+        brake_thr = self._config.get("brake_thr", 35) / 100 * 0.9
 
         if adaptive:
             blocker = self._blocked_by_transient()
@@ -1123,9 +1085,9 @@ class TCULogic:
         ):
             up_pct = self._curve(
                 thr,
-                self._config.get("dynamic_up_idle", 42) / 100,
-                self._config.get("dynamic_up_mid", 58) / 100,
-                self._config.get("dynamic_up_wot", 82) / 100,
+                self._config.get("track_up_idle", 42) / 100,
+                self._config.get("track_up_mid", 58) / 100,
+                self._config.get("track_up_wot", 94) / 100,
             )
             if td.rpm_pct >= up_pct:
                 self._shift_up(td, 350, "UPSHIFT", "cruise")
@@ -1145,24 +1107,16 @@ class TCULogic:
         self._tcu_state = "CRUISING"
         self._tcu_state_sub = "adaptive" if adaptive else "relaxed"
 
-    def _mode_drift(self, td: Telemetry, now: float):
-        if td.speed_kmh < 30.0:
-            self._tcu_state = "DRIFT"
-            self._tcu_state_sub = "low speed"
+    def _mode_mud(self, td: Telemetry, now: float):
+        if (
+            td.rpm_pct >= 0.96
+            and td.gear >= 1
+            and td.speed_kmh > Cfg.MIN_SPEED_KMH
+            and now >= self._no_upshift_until
+        ):
+            self._shift_up(td, 500, "REDLINE SAVE", "rpm ceiling")
             return
-        if td.rpm_pct < 0.20 and td.gear > 1:
-            self._shift_down(td, 350, "DRIFT HOLD", "save engine")
-            return
-        if td.rpm_pct < self._config.get("drift_down", 65) / 100 and td.gear > 1:
-            self._shift_down(td, 300, "DRIFT HOLD", "rpm low")
-            return
-        if td.rpm_pct >= self._config.get("drift_up", 92) / 100:
-            self._shift_up(td, 300, "DRIFT HOLD", "limiter")
-            return
-        self._tcu_state = "DRIFT HOLD"
-        self._tcu_state_sub = "in power band"
 
-    def _mode_offroad(self, td: Telemetry, now: float):
         thr = td.throttle
         brake_thr = self._config.get("brake_thr", 35) / 100
 
@@ -1175,11 +1129,17 @@ class TCULogic:
             self._shift_down(td, 400, "ANTI-STALL", "save engine")
             return
 
-        blocker = self._blocked_by_transient()
-        if blocker is not None:
-            self._tcu_state = blocker
-            self._tcu_state_sub = "offroad — hold"
+        if self._config.get("feat_airtime_lock") and self._airtime.is_airborne:
+            self._tcu_state = "AIRBORNE"
+            self._tcu_state_sub = "mud — hold"
             return
+            
+        if self._airtime.just_landed:
+            self._no_downshift_until = 0.0
+            target = self._target_gear_for_braking(td)
+            if target is not None and target < td.gear:
+                self._shift_down(td, 300, "LANDING", f"→{target}")
+                return
 
         if self._track_brake_down(td, now, brake_thr, lock_ms=300):
             return
@@ -1192,7 +1152,7 @@ class TCULogic:
             self._shift_up(td, 400, "WHEELSPIN", "lose grip")
             return
 
-        down_rpm = self._config.get("offroad_down_rpm", 55) / 100
+        down_rpm = self._config.get("mud_down_rpm", 55) / 100
         if thr >= 0.40 and td.rpm_pct < down_rpm and td.gear > 1 and td.speed_kmh > 8.0:
             self._shift_down(td, 450, "TORQUE DOWN", "climbing")
             self._no_upshift_until = now + 1.5
@@ -1204,5 +1164,5 @@ class TCULogic:
         if self._track_upshift_in_band(td, now, offset=0.07, min_throttle=0.20):
             return
 
-        self._tcu_state = "OFFROAD"
+        self._tcu_state = "MUD"
         self._tcu_state_sub = "torque ready"

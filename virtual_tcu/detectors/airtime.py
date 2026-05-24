@@ -15,6 +15,7 @@ class AirtimeDetector:
         self._airborne_streak = 0
         self._grounded_streak = 0
         self._is_airborne = False
+        self._just_landed = False
 
     def update(self, td: Telemetry) -> bool:
         low_g = abs(td.accel_y) < self.LOW_VERTICAL_G_THRESHOLD
@@ -27,6 +28,8 @@ class AirtimeDetector:
         )
         airborne_now = td.speed_kmh > self.MIN_SPEED_FOR_AIRBORNE and low_g and all_spin
 
+        was_airborne = self._is_airborne
+
         if airborne_now:
             self._airborne_streak += 1
             self._grounded_streak = 0
@@ -37,9 +40,19 @@ class AirtimeDetector:
             self._airborne_streak = 0
             if self._grounded_streak >= self.FRAMES_TO_DISENGAGE:
                 self._is_airborne = False
+
+        if was_airborne and not self._is_airborne:
+            self._just_landed = True
+
         return self._is_airborne
 
     @property
     def is_airborne(self) -> bool:
         return self._is_airborne
+
+    @property
+    def just_landed(self) -> bool:
+        val = self._just_landed
+        self._just_landed = False
+        return val
 
