@@ -1,64 +1,21 @@
-<script setup>
-import { toRefs, computed } from 'vue'
+<script setup lang="ts">
+import { toRefs } from 'vue'
+import { useDashboardPanel } from './dashboard-panel'
 
 const props = defineProps({
   live: { type: Boolean, required: true },
   telemetry: { type: Object, default: () => ({}) },
 })
+
 const { live, telemetry } = toRefs(props)
 
-const t = computed(() => telemetry.value || {})
-const speed = computed(() => Math.round(t.value.speed_kmh || 0))
-const rpm = computed(() => Math.round(t.value.rpm || 0))
-const rpmMax = computed(() => Math.round(t.value.rpm_max || 8000))
-const rpmPct = computed(() => t.value.rpm_pct || 0)
-const powerKw = computed(() => Math.round(t.value.power_kw || 0))
-const torqueNm = computed(() => Math.round(t.value.torque_nm || 0))
-const turboBar = computed(() => (t.value.turbo_bar || 0).toFixed(2))
-
-const throttle = computed(() => (t.value.throttle || 0) * 100)
-const brake = computed(() => (t.value.brake || 0) * 100)
-const clutch = computed(() => (t.value.clutch_raw ? (t.value.clutch_raw / 255) * 100 : 0))
-
-const gLat = computed(() => t.value.g_lat || 0)
-const gLon = computed(() => t.value.g_lon || 0)
-const gripUsage = computed(() => (t.value.grip_usage || 0) * 100)
-
-const state = computed(() => t.value.tcu_state || 'STANDBY')
-const subState = computed(() => t.value.tcu_state_sub || 'AWAITING TELEMETRY')
-const attitude = computed(() => t.value.attitude || 'NEUTRAL')
-const hint = computed(() => t.value.shift_hint || '')
-
-const isAirborne = computed(() => t.value.airborne || false)
-const isYawLocked = computed(() => t.value.yaw_transient || false)
-
-const gear = computed(() => {
-  const g = t.value.gear
-  if (g === 0) return 'R'
-  if (g === 11) return 'N'
-  return g || '-'
-})
-
-const getLedColor = (index, pct) => {
-  const totalLeds = 20
-  const threshold = index / totalLeds
-  
-  if (pct < threshold) return 'bg-[#18181b] shadow-none' 
-  
-  if (index > 17) return 'bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.9)]'
-  if (index > 13) return 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.9)]' 
-  if (index > 8) return 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]'
-  return 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]'
-}
-
-const gDotStyle = computed(() => {
-  const maxG = 1.5
-  const x = Math.max(-maxG, Math.min(maxG, gLat.value))
-  const y = Math.max(-maxG, Math.min(maxG, gLon.value))
-  const px = 50 + (x / maxG) * 50
-  const py = 50 - (y / maxG) * 50
-  return { left: `${px}%`, top: `${py}%` }
-})
+// Tüm mantığı dışarıdaki .ts dosyasından içeri çekiyoruz
+const {
+  t, speed, rpm, rpmMax, rpmPct, powerKw, torqueNm, turboBar,
+  throttle, brake, clutch, gLat, gLon, gripUsage,
+  state, subState, attitude, hint, isAirborne, isYawLocked,
+  gear, getLedColor, gHistory, gDotStyle, getTrailStyle
+} = useDashboardPanel(live, telemetry)
 </script>
 
 <template>
@@ -219,12 +176,17 @@ const gDotStyle = computed(() => {
         <div class="bg-[#0a0a0c] border border-[#27272a] rounded-lg p-3 flex flex-col items-center justify-center relative">
           <div class="text-[10px] text-tcu-txt-dim uppercase tracking-widest absolute top-2 left-3">G-Force</div>
           
-          <div class="w-24 h-24 mt-4 rounded-full border-2 border-[#27272a] bg-[#111113] relative">
+          <div class="w-24 h-24 mt-4 rounded-full border-2 border-[#27272a] bg-[#111113] relative overflow-hidden">
             <div class="absolute top-1/2 left-0 w-full h-[1px] bg-[#27272a]"></div>
             <div class="absolute top-0 left-1/2 w-[1px] h-full bg-[#27272a]"></div>
             <div class="absolute top-[25%] left-[25%] w-1/2 h-1/2 rounded-full border border-[#27272a]/50"></div>
             
-            <div class="absolute w-3 h-3 bg-yellow-400 rounded-full shadow-[0_0_8px_rgba(250,204,21,0.8)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-75"
+            <div v-for="(pt, i) in gHistory" :key="pt.id"
+                 class="absolute w-2 h-2 bg-yellow-400 rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-none pointer-events-none"
+                 :style="getTrailStyle(pt, i)">
+            </div>
+            
+            <div class="absolute w-3 h-3 bg-yellow-400 rounded-full shadow-[0_0_8px_rgba(250,204,21,0.8)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-75 z-10"
                  :style="gDotStyle">
             </div>
           </div>
