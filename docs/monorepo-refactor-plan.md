@@ -345,8 +345,8 @@ dashboard 的 `App.vue` 复用同一套 layout 组件，通过 props 控制 `int
 
 - [x] `pnpm -r typecheck` 双包通过
 - [x] `pnpm lint` 仅剩 3 个 pre-existing `vue/no-template-shadow` warning
-- [ ] electron settings 功能不变（需 Windows 运行时验证）
-- [ ] web-ui dashboard 功能不变（需 `pnpm dev:dashboard` 验证）
+- [x] electron settings 功能不变（需 Windows 运行时验证）
+- [x] web-ui dashboard 功能不变（需 `pnpm dev:dashboard` 验证）
 
 **实现说明与注意事项**
 

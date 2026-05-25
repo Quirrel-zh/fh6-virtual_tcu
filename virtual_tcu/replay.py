@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import sys
+from dataclasses import fields
 from pathlib import Path
 from typing import IO, Iterable, Optional, TextIO
 
@@ -40,24 +42,30 @@ def format_text_line(rel_ms: int, t: Telemetry, *, prev_gear: Optional[int]) -> 
     )
 
 
-def format_csv_row(rel_ms: int, t: Telemetry) -> dict[str, str | int | float]:
-    return {
-        "time_ms": rel_ms,
-        "gear": t.gear,
-        "gear_label": _gear_label(t.gear),
-        "rpm": round(t.current_rpm, 1),
-        "max_rpm": round(t.engine_max_rpm, 1),
-        "speed_kmh": round(t.speed_kmh, 2),
-        "throttle": round(t.throttle, 3),
-        "brake": round(t.brake, 3),
-        "power_kw": round(t.power_w / 1000, 2),
-        "torque_nm": round(t.torque_nm, 1),
-        "boost": round(t.boost_raw, 3),
-        "is_race_on": t.is_race_on,
-        "car_ordinal": t.car_ordinal,
-        "drivetrain": t.drivetrain_name,
-        "is_shifting": int(t.is_shifting),
-    }
+def telemetry_record(rel_ms: int, t: Telemetry) -> dict[str, object]:
+    """All parsed FH6 Car Dash fields (raw + derived) for inspection."""
+    record = {f.name: getattr(t, f.name) for f in fields(Telemetry)}
+    record.update(
+        {
+            "time_ms": rel_ms,
+            "gear_label": _gear_label(t.gear),
+            "speed_kmh": round(t.speed_kmh, 4),
+            "speed_effective_ms": round(t.speed_effective_ms, 4),
+            "rpm_pct": round(t.rpm_pct, 6),
+            "throttle": round(t.throttle, 6),
+            "brake": round(t.brake, 6),
+            "clutch": round(t.clutch_raw / 255.0, 6),
+            "power_kw": round(t.power_w / 1000, 4),
+            "drivetrain_name": t.drivetrain_name,
+            "rear_slip": round(t.rear_slip, 4),
+            "front_slip": round(t.front_slip, 4),
+        }
+    )
+    return record
+
+
+def format_csv_row(rel_ms: int, t: Telemetry) -> dict[str, object]:
+    return telemetry_record(rel_ms, t)
 
 
 def format_replay(
@@ -74,7 +82,9 @@ def format_replay(
     first_ms: Optional[int] = None
     last_ms: Optional[int] = None
     car_ordinal: Optional[int] = None
+    tune_keys: set[tuple[int, int, int]] = set()
     csv_rows: list[dict] = []
+    json_rows: list[dict] = []
 
     if fmt == "text":
         out.write(f"# file: {path.name}\n")
@@ -89,6 +99,8 @@ def format_replay(
             continue
         if car_ordinal is None and t.car_ordinal:
             car_ordinal = t.car_ordinal
+        if t.is_race_on and t.car_ordinal:
+            tune_keys.add((t.car_ordinal, t.pi, int(t.engine_max_rpm)))
 
         gear_changed = prev_gear is not None and t.gear != prev_gear
         if gear_changed:
@@ -97,6 +109,10 @@ def format_replay(
 
         if fmt == "text" and include:
             out.write(format_text_line(rel_ms, t, prev_gear=prev_gear) + "\n")
+        elif fmt == "json" and include:
+            json_rows.append(telemetry_record(rel_ms, t))
+        elif fmt == "jsonl" and include:
+            out.write(json.dumps(telemetry_record(rel_ms, t), ensure_ascii=False) + "\n")
         elif fmt == "csv" and include:
             csv_rows.append(format_csv_row(rel_ms, t))
 
@@ -115,6 +131,10 @@ def format_replay(
         out.write(f"  gear changes: {shifts}\n")
         if car_ordinal is not None:
             out.write(f"  car_ordinal: {car_ordinal}\n")
+        if tune_keys:
+            out.write("  tune variants (car_ordinal, pi, max_rpm):\n")
+            for key in sorted(tune_keys):
+                out.write(f"    - {key}\n")
         out.write("\n")
 
     duration_ms = (last_ms - first_ms) if first_ms is not None and last_ms is not None else 0
@@ -125,6 +145,7 @@ def format_replay(
         "shifts": shifts,
         "duration_ms": duration_ms,
         "car_ordinal": car_ordinal,
+        "json_rows": json_rows,
     }
 
 
@@ -140,14 +161,25 @@ def format_paths(
         raise SystemExit("no input files matched")
 
     totals = {"parsed": 0, "skipped": 0, "shifts": 0}
+    json_rows: list[dict] = []
     for i, path in enumerate(path_list):
         stats = format_replay(path, out, fmt=fmt, shift_only=shift_only)
         totals["parsed"] += stats["parsed"]
         totals["skipped"] += stats["skipped"]
         totals["shifts"] += stats["shifts"]
+        if fmt == "json":
+            rows = stats["json_rows"]
+            if len(path_list) > 1:
+                for row in rows:
+                    row["_source_file"] = path.name
+            json_rows.extend(rows)
 
         if fmt == "text" and len(path_list) > 1 and i < len(path_list) - 1:
             out.write("\n")
+
+    if fmt == "json" and json_rows:
+        json.dump(json_rows, out, ensure_ascii=False, indent=2)
+        out.write("\n")
 
     if len(path_list) > 1 and fmt == "text":
         out.write(
@@ -174,9 +206,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--format",
-        choices=("text", "csv", "summary"),
+        choices=("text", "csv", "json", "jsonl", "summary"),
         default="text",
-        help="output format (default: text)",
+        help="output format: json = single JSON array; jsonl = one object per line",
     )
     parser.add_argument(
         "--shift-only",

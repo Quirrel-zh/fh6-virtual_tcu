@@ -27,6 +27,9 @@ class Telemetry:
     gear: int = 0
     car_ordinal: int = 0
     car_class: int = 0
+    pi: int = 0
+    session_timestamp: int = 0
+    idle_rpm: float = 0.0
     drivetrain: int = 0
     num_cylinders: int = 0
     slip_fl: float = 0.0
