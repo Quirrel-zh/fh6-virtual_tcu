@@ -1,4 +1,4 @@
-import { i18n } from '@web-ui/i18n'
+import { i18n } from '@virtual-tcu/shared/i18n'
 import { createApp } from 'vue'
 import SettingsApp from './SettingsApp.vue'
 import './styles.css'

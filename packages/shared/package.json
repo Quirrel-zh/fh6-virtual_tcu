@@ -1,0 +1,19 @@
+{
+  "name": "@virtual-tcu/shared",
+  "type": "module",
+  "version": "13.0.1",
+  "private": true,
+  "exports": {
+    "./api/*": "./src/api/*",
+    "./composables/*": "./src/composables/*",
+    "./config/*": "./src/config/*",
+    "./i18n": "./src/i18n/index.ts",
+    "./locales/*": "./src/locales/*",
+    "./types/*": "./src/types/*",
+    "./utils/*": "./src/utils/*"
+  },
+  "dependencies": {
+    "vue": "^3.5.32",
+    "vue-i18n": "^11.3.2"
+  }
+}

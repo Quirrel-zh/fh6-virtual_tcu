@@ -246,13 +246,13 @@
 
         <div class="grid h-[156px] shrink-0 grid-cols-[1fr_200px_200px] gap-3 overflow-hidden">
           <div
-            class="relative flex flex-col justify-center overflow-hidden rounded-lg border bg-[#0a0a0c] p-5"
+            class="relative flex flex-col justify-center overflow-hidden rounded-lg border bg-tcu-bg-1 p-5"
             :class="
               state === 'SHIFTING'
                 ? 'border-accent-2/50 bg-accent-2/5'
                 : state.includes('LOCK') || state.includes('BLOCKED')
                   ? 'border-danger/50 bg-danger/5'
-                  : 'border-[#27272a]'
+                  : 'border-tcu-border'
             "
           >
             <div

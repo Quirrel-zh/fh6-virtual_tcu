@@ -65,3 +65,5 @@ ehthumbs.db
 !.env.example
 
 node_modules
+
+.claude/*.local.json

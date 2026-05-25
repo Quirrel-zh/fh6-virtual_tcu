@@ -1,7 +1,5 @@
 /// <reference types="vite/client" />
 
-declare const __APP_VERSION__: string
-
 import type { TcuMainApi, UpdaterCheckResult, UpdaterStatus } from '../preload/main'
 
 declare module '*.vue' {
@@ -11,6 +9,7 @@ declare module '*.vue' {
 }
 
 declare global {
+  const __APP_VERSION__: string
   interface Window {
     tcu?: TcuMainApi
     isElectron?: boolean

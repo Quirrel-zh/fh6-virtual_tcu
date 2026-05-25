@@ -3,16 +3,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["../web-ui/src/*"],
-      "@web-ui/*": ["../web-ui/src/*"]
+      "@virtual-tcu/shared/*": ["../packages/shared/src/*"]
     },
     "types": ["node", "vite/client"]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.vue",
-    "electron.vite.config.ts",
-    "../web-ui/env.d.ts"
+    "electron.vite.config.ts"
   ],
   "exclude": ["node_modules", "out", "release"]
 }

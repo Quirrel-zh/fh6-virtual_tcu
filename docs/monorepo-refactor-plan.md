@@ -10,7 +10,7 @@
 
 - [x] Phase 0 — 基础设施 ✅ 2026-05-25
 - [ ] Phase 0.5 — Python Ruff（lint + format）
-- [ ] Phase 1 — 抽取 `@virtual-tcu/shared`
+- [x] Phase 1 — 抽取 `@virtual-tcu/shared` ✅ 2026-05-25
 - [ ] Phase 2 — 抽取 `@virtual-tcu/ui` + Naive UI 统一
 - [ ] Phase 3 — 工具链升级（**Vite 7 统一** / Electron 42 / electron-vite 5）
 - [ ] Phase 4 — 目录迁移与 CI
@@ -23,9 +23,10 @@
 | 项目 | 状态 |
 |------|------|
 | **Phase 0** | ✅ 已完成 — pnpm workspace、根级 ESLint/Prettier/TS、双包 typecheck 通过 |
-| **Phase 0.5–5** | ⬜ 未开始 |
+| **Phase 1** | ✅ 已完成 — `@virtual-tcu/shared` 抽取完毕，双包 typecheck + lint 通过 |
+| **Phase 0.5 / 2–5** | ⬜ 未开始 |
 | **Python lint/format** | ⬜ 无配置（`.gitignore` 已有 `.ruff_cache/` 占位，待 Phase 0.5 落地） |
-| **workspace 结构** | `web-ui` + `electron`（原位，尚未 rename 到 `apps/`） |
+| **workspace 结构** | `packages/shared` + `web-ui` + `electron`（原位，尚未 rename 到 `apps/`） |
 | **pnpm** | 10.33.0（`packageManager` 已锁定；原方案 11.3 暂未升级） |
 | **web-ui Vite** | ^7.3.2（已是目标版本） |
 | **electron Vite** | ^5.4.11（待 Phase 3 升到 ^7.3.x） |
@@ -33,11 +34,11 @@
 | **Electron** | ^33.2.1（待 Phase 3 升到 42.2.0） |
 | **已知 peer 警告** | `@vitejs/plugin-vue@5` 不支持 Vite 7 → Phase 3 升 plugin-vue 6 消除 |
 
-**下一步建议**：Phase 0.5（Ruff，独立小步）或 Phase 1（抽 shared）或 Phase 3（工具链，可并行）
+**下一步建议**：Phase 0.5（Ruff，独立小步）或 Phase 2（抽 UI 组件 + Naive 统一）或 Phase 3（工具链升级，可并行）
 
 ---
 
-当前已是 **pnpm workspace**（Phase 0 完成），但 `web-ui/` 与 `electron/` 仍在原位，共享代码通过路径 alias 耦合，Python 后端在根目录。`packages/` 与 `apps/` 目录尚未创建。
+当前已是 **pnpm workspace**（Phase 0 + 1 完成）。`packages/shared/` 已创建并承载所有共享逻辑，`web-ui/` 与 `electron/` 仍在原位（尚未 rename 到 `apps/`），Python 后端在根目录。electron 已移除 `@web-ui` alias，直接依赖 `@virtual-tcu/shared`。
 
 | 维度 | web-ui | electron |
 |------|--------|----------|
@@ -329,22 +330,31 @@ dashboard 的 `App.vue` 复用同一套 layout 组件，通过 props 控制 `int
 
 ### Phase 1 — 抽取 `@virtual-tcu/shared`
 
-- [ ] 创建 `packages/shared/` 目录与 `package.json`
-- [ ] 迁移 `api/ws-client.ts`
-- [ ] 迁移 `composables/`（`useTcuStore`、`useTcuViewStore`、`useGraph` 等）
-- [ ] 迁移 `config/`（modes、settings、links）
-- [ ] 迁移 `i18n/` 与 `locales/`
-- [ ] 迁移 `types/` 与 `utils/`
-- [ ] 配置 `packages/shared/tsconfig.json` 与 exports
-- [ ] `web-ui` 改为依赖 `@virtual-tcu/shared`（import 路径 `@/` → workspace 包）
-- [ ] `electron` 移除 `@web-ui` alias，改为 workspace 依赖
-- [ ] 验证 electron settings-renderer 仍可正常引用 shared 模块
+- [x] 创建 `packages/shared/` 目录与 `package.json`
+- [x] 迁移 `api/ws-client.ts`
+- [x] 迁移 `composables/`（`useTcuStore`、`useTcuViewStore`、`useGraph`、`useNetworkSettings`）
+- [x] 迁移 `config/`（modes、settings、links）
+- [x] 迁移 `i18n/` 与 `locales/`
+- [x] 迁移 `types/` 与 `utils/`
+- [x] 配置 `packages/shared/tsconfig.json` 与 exports
+- [x] `web-ui` 改为依赖 `@virtual-tcu/shared`（import 路径 `@/` → workspace 包）
+- [x] `electron` 移除 `@web-ui` alias，改为 workspace 依赖
+- [x] 验证 electron settings-renderer 仍可正常引用 shared 模块
 
 **验收**
 
-- [ ] electron settings 功能不变
-- [ ] web-ui dashboard 功能不变
-- [ ] 仅路径变更，无 UI 改动
+- [x] `pnpm -r typecheck` 双包通过
+- [x] `pnpm lint` 仅剩 3 个 pre-existing `vue/no-template-shadow` warning
+- [ ] electron settings 功能不变（需 Windows 运行时验证）
+- [ ] web-ui dashboard 功能不变（需 `pnpm dev:dashboard` 验证）
+
+**实现说明与注意事项**
+
+1. **模块解析策略**：`@virtual-tcu/shared/*` 通过 tsconfig `paths` 映射到 `../packages/shared/src/*`，而非依赖 Node subpath exports。原因：pnpm `shamefully-hoist=true` + `node-linker=hoisted` 模式下，workspace 内部包的 symlink 不会提升到根 `node_modules`，而是放在各消费者的 `node_modules` 中。TypeScript 的 `moduleResolution: Bundler` 对 subpath exports 的支持有限，paths 映射更可靠。
+2. **web-ui 保留 re-export 薄层**：`web-ui/src/` 下的 `types/`、`composables/`、`config/` 等文件改为 re-export `@virtual-tcu/shared`，而非直接删除。这样 web-ui 内部组件的 `@/` 路径 import 无需改动，降低变更风险。Phase 5 清理时可考虑将组件内 import 直接指向 shared 后删除这些 re-export。
+3. **`useNetworkSettings` 提升**：原位于 `web-ui/src/components/network-settings.ts`（composable 放在 components 目录下），迁移时归入 `packages/shared/src/composables/useNetworkSettings.ts`。web-ui 侧保留 re-export 以兼容旧 import 路径。
+4. **`__APP_VERSION__` 全局声明**：electron `env.d.ts` 中 `declare const __APP_VERSION__` 需放在 `declare global {}` 块内（因文件有 `export` 语句使其成为 module）。
+5. **Phase 2/3 注意**：electron vite config 已移除 `resolve.alias`（`@web-ui` 和 `@`），后续 Phase 2 如果 `@virtual-tcu/ui` 也是源码包，同样需要 tsconfig paths 映射而非仅靠 package.json exports。
 
 ---
 

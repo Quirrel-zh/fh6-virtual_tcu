@@ -1,17 +1,16 @@
-import type {SliderDef} from '@web-ui/config/settings';
-import type {AppLocale} from '@web-ui/i18n';
-import { useNetworkSettings } from '@web-ui/components/network-settings'
-import { useTcuStore } from '@web-ui/composables/useTcuStore'
-import { DRIVE_MODES } from '@web-ui/config/modes'
+import type { SliderDef } from '@virtual-tcu/shared/config/settings'
+import type { AppLocale } from '@virtual-tcu/shared/i18n'
+import { useNetworkSettings } from '@virtual-tcu/shared/composables/useNetworkSettings'
+import { useTcuStore } from '@virtual-tcu/shared/composables/useTcuStore'
+import { DRIVE_MODES } from '@virtual-tcu/shared/config/modes'
 import {
   FEATURE_TOGGLES,
   HOTKEY_FIELDS,
   SETTING_SLIDERS,
-  SHIFT_KEY_FIELDS
-  
-} from '@web-ui/config/settings'
-import {  setAppLocale } from '@web-ui/i18n'
-import { formatDuration } from '@web-ui/utils/format'
+  SHIFT_KEY_FIELDS,
+} from '@virtual-tcu/shared/config/settings'
+import { setAppLocale } from '@virtual-tcu/shared/i18n'
+import { formatDuration } from '@virtual-tcu/shared/utils/format'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUpdater } from './useUpdater'

@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 
-const webUiSrc = resolve(__dirname, '../web-ui/src')
 const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'))
 const versionDefine = { __APP_VERSION__: JSON.stringify(pkg.version) }
 
@@ -38,12 +37,6 @@ export default defineConfig({
           index: resolve(__dirname, 'src/hud-renderer/index.html'),
           settings: resolve(__dirname, 'src/settings-renderer/index.html'),
         },
-      },
-    },
-    resolve: {
-      alias: {
-        '@web-ui': webUiSrc,
-        '@': webUiSrc,
       },
     },
     plugins: [vue(), tailwindcss()],

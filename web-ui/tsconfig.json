@@ -2,7 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@virtual-tcu/shared/*": ["../packages/shared/src/*"]
     },
     "types": ["vite/client"]
   },
