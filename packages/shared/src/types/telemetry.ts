@@ -41,6 +41,7 @@ export interface TelemetrySnapshot {
   rpm_pct: number
   throttle: number
   brake: number
+  clutch_raw?: number
   tcu_state: string
   tcu_state_sub: string
   shift_hint?: string

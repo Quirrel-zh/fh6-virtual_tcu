@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@virtual-tcu/shared/*": ["../packages/shared/src/*"]
+      "@virtual-tcu/shared/*": ["../packages/shared/src/*"],
+      "@virtual-tcu/ui/*": ["../packages/ui/src/*"]
     },
     "types": ["node", "vite/client"]
   },

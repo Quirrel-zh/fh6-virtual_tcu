@@ -1,0 +1,8 @@
+export { settingsContextKey } from './context'
+export type { SettingsContext } from './context'
+export { default as SettingsAbout } from './SettingsAbout.vue'
+export { default as SettingsAdvanced } from './SettingsAdvanced.vue'
+export { default as SettingsConfig } from './SettingsConfig.vue'
+export { default as SettingsHistory } from './SettingsHistory.vue'
+export { default as SettingsOverview } from './SettingsOverview.vue'
+export { default as SettingsStats } from './SettingsStats.vue'

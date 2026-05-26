@@ -1,4 +1,5 @@
-<script setup>
+<script setup lang="ts">
+  import type { LogStatus, TelemetrySnapshot } from '@/types/telemetry'
   import { toRefs } from 'vue'
   import { DRIVE_MODES } from '@/config/modes'
   import {
@@ -14,15 +15,23 @@
   import { modeBtnClass, REGIME_PILL } from '@/utils/mode-colors'
   import { useModeSidebar } from './mode-sidebar'
 
-  const props = defineProps({
-    mode: { type: String, required: true },
-    shiftCount: { type: Number, required: true },
-    packetsTotal: { type: Number, required: true },
-    telemetry: { type: Object, default: null },
-    logStatus: { type: Object, default: null },
-    interactive: { type: Boolean, default: true },
+  const props = withDefaults(defineProps<{
+    mode: string
+    shiftCount: number
+    packetsTotal: number
+    telemetry?: TelemetrySnapshot | null
+    logStatus?: LogStatus | null
+    interactive?: boolean
+  }>(), {
+    telemetry: null,
+    logStatus: null,
+    interactive: true,
   })
-  const emit = defineEmits(['setMode', 'logStart', 'logStop'])
+  const emit = defineEmits<{
+    setMode: [mode: string]
+    logStart: [mode: string]
+    logStop: []
+  }>()
 
   const { telemetry, logStatus, interactive } = toRefs(props)
   const {

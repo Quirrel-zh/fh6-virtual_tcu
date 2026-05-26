@@ -1,12 +1,1 @@
-import type { AppLocale } from '@/i18n'
-import { setAppLocale } from '@/i18n'
-
-export const localeOptions: { value: AppLocale, labelKey: string }[] = [
-  { value: 'en', labelKey: 'locale.en' },
-  { value: 'zh-CN', labelKey: 'locale.zh' },
-]
-
-export function onLocaleChange(e: Event) {
-  const v = (e.target as HTMLSelectElement).value as AppLocale
-  setAppLocale(v)
-}
+export { localeOptions, onLocaleChange } from '@virtual-tcu/ui/layout'

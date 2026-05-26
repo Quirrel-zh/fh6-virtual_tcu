@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { actionBtn, actionBtnCompact, actionBtnPrimary } from '@/styles/ui'
 import { modalBindings, textareaValue } from './profile-modal'
 

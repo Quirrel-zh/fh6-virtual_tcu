@@ -1,4 +1,5 @@
-<script setup>
+<script setup lang="ts">
+import type { DriveMode } from '@/types/ws'
 import { toRefs } from 'vue'
 import { MODE_PILL } from '@/utils/mode-colors'
 import { connectionDotClass, headerProps, useHeaderConnectionKey } from './app-header'
@@ -19,7 +20,7 @@ const appVersion = `v${__APP_VERSION__}`
       <span class="ml-2 text-sm font-normal text-tcu-txt-dim">{{ appVersion }}</span>
       <span
         class="ml-3.5 inline-block rounded-full border px-3 py-1 text-[11px] font-bold tracking-widest max-[700px]:hidden"
-        :class="MODE_PILL[mode] ?? MODE_PILL.COMFORT"
+        :class="MODE_PILL[mode as DriveMode] ?? MODE_PILL.COMFORT"
       >
         {{ mode }}
       </span>
