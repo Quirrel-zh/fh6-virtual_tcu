@@ -22,7 +22,7 @@
   "i18n-ally.enabledFrameworks": ["vue"],
   "i18n-ally.translate.engines": ["google"],
   "i18n-ally.readonly": false,
-  "i18n-ally.localesPaths": ["web-ui/src/locales"],
+  "i18n-ally.localesPaths": ["packages/shared/src/locales"],
   "i18n-ally.namespace": true,
   "i18n-ally.pathMatcher": "{locale}/{namespace}.{ext}",
   "cSpell.words": ["AMAP", "YAPI"]

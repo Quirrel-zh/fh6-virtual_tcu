@@ -10,5 +10,5 @@ REM This script does NOT bundle the Python backend; the Electron main process
 REM falls back to `python -m virtual_tcu --backend-only` when no PyInstaller
 REM build exists at dist/VirtualTCU/VirtualTCU.exe.
 
-cd /d "%~dp0\..\electron"
-npm run dev
+cd /d "%~dp0\.."
+pnpm dev:electron
