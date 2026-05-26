@@ -31,7 +31,7 @@
 
 ### 1. 下载
 
-打开 **[GitHub Releases](https://github.com/Quirrel-zh/fh6-virtual_tcu/releases)**，下载最新的 `VirtualTCU-*-win64.exe`。
+打开 **[GitHub Releases](https://github.com/Forza-Love/fh6-virtual_tcu/releases)**，下载最新的 `VirtualTCU-*-win64.exe`。
 
 ### 2. 安装与启动
 
@@ -104,7 +104,7 @@
 
 ### 1. 下载
 
-从 **[GitHub Releases](https://github.com/Quirrel-zh/fh6-virtual_tcu/releases)** 下载 `VirtualTCU-Backend-*-win64.zip`。
+从 **[GitHub Releases](https://github.com/Forza-Love/fh6-virtual_tcu/releases)** 下载 `VirtualTCU-Backend-*-win64.zip`。
 
 ### 2. 解压
 

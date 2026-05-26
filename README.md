@@ -31,7 +31,7 @@ Recommended for most users. Single installer that bundles the Python backend, pr
 
 ### 1. Download
 
-Open **[GitHub Releases](https://github.com/Quirrel-zh/fh6-virtual_tcu/releases)** and download the latest `VirtualTCU-*-win64.exe`.
+Open **[GitHub Releases](https://github.com/Forza-Love/fh6-virtual_tcu/releases)** and download the latest `VirtualTCU-*-win64.exe`.
 
 ### 2. Install & launch
 
@@ -104,7 +104,7 @@ For users who want the original portable layout without Electron, HUD, or auto-u
 
 ### 1. Download
 
-`VirtualTCU-Backend-*-win64.zip` from **[GitHub Releases](https://github.com/Quirrel-zh/fh6-virtual_tcu/releases)**.
+`VirtualTCU-Backend-*-win64.zip` from **[GitHub Releases](https://github.com/Forza-Love/fh6-virtual_tcu/releases)**.
 
 ### 2. Extract
 

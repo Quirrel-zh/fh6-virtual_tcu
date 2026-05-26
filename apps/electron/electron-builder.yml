@@ -45,6 +45,6 @@ nsis:
 
 publish:
   - provider: github
-    owner: f2iclo
+    owner: Forza-Love
     repo: fh6-virtual_tcu
     releaseType: release
