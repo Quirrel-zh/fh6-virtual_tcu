@@ -104,20 +104,34 @@ function startBackend(): Promise<void> {
 
     // Pipe backend stdout through a PassThrough so we can both forward it
     // (async, respects backpressure) AND listen for the READY_MARKER.
+    // Use line-buffered parsing — 'data' fires on arbitrary chunk boundaries,
+    // and the marker could be split across two chunks.  We split on \n, carry
+    // the trailing partial across events, and check each complete line.
     const stdoutPass = new PassThrough()
     backend.stdout?.pipe(stdoutPass).pipe(process.stdout)
+    let _lineBuf = ''
     stdoutPass.on('data', (chunk: Buffer) => {
-      const text = chunk.toString('utf-8')
-      const parsedUrl = parseWebUiUrl(text)
-      if (parsedUrl)
-        backendEndpoints = endpointsFromHttpUrl(parsedUrl, resolveBackendEndpoints(backendDataCwd))
-      if (!settled && text.includes(READY_MARKER)) {
-        settled = true
-        backendReady = true
-        if (!parsedUrl) backendEndpoints = resolveBackendEndpoints(backendDataCwd)
-        clearTimeout(timeout)
-        broadcastBackendReady()
-        resolveStart()
+      const raw = _lineBuf + chunk.toString('utf-8')
+      const lines = raw.split('\n')
+      // The last element is either a partial line or '' (if the chunk ended
+      // with \n).  Keep it for the next chunk.
+      _lineBuf = lines.pop() ?? ''
+      for (const line of lines) {
+        if (line.length === 0) continue
+        const parsedUrl = parseWebUiUrl(line)
+        if (parsedUrl)
+          backendEndpoints = endpointsFromHttpUrl(
+            parsedUrl,
+            resolveBackendEndpoints(backendDataCwd),
+          )
+        if (!settled && line.includes(READY_MARKER)) {
+          settled = true
+          backendReady = true
+          if (!parsedUrl) backendEndpoints = resolveBackendEndpoints(backendDataCwd)
+          clearTimeout(timeout)
+          broadcastBackendReady()
+          resolveStart()
+        }
       }
     })
     // Pipe stderr directly — no marker detection needed.
@@ -237,7 +251,7 @@ function createSettingsWindow() {
     title: 'Virtual TCU',
     webPreferences: {
       preload: join(__dirname, '..', 'preload', 'main.js'),
-      sandbox: false,
+      sandbox: true,
       backgroundThrottling: false,
     },
   })
@@ -312,7 +326,7 @@ function createHudWindow() {
     backgroundColor: '#00000000',
     webPreferences: {
       preload: join(__dirname, '..', 'preload', 'hud.js'),
-      sandbox: false,
+      sandbox: true,
       backgroundThrottling: false,
     },
   })
