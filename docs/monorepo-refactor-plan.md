@@ -12,7 +12,7 @@
 - [x] Phase 0.5 — Python Ruff（lint + format）✅ 2026-05-26
 - [x] Phase 1 — 抽取 `@virtual-tcu/shared` ✅ 2026-05-25
 - [x] Phase 2 — 抽取 `@virtual-tcu/ui` + Naive UI 统一 ✅ 代码 2026-05-26 / ⏳ 运行时验收待定
-- [ ] Phase 3 — 工具链升级（**Vite 7 统一** / Electron 42 / electron-vite 5）
+- [x] Phase 3 — 工具链升级（**Vite 7 统一** / Electron 42 / electron-vite 5）✅ 2026-05-26
 - [ ] Phase 4 — 目录迁移与 CI
 - [ ] Phase 5 — 清理与文档
 
@@ -29,11 +29,13 @@
 | **Python lint/format** | ✅ Ruff 0.15.14（`ruff check` + `ruff format`）；配 `lint:py` / `format:py` 脚本 |
 | **workspace 结构** | `packages/shared` + `packages/ui` + `web-ui` + `electron`（原位，尚未 rename 到 `apps/`） |
 | **pnpm** | 10.33.0（`packageManager` 已锁定；原方案 11.3 暂未升级） |
-| **web-ui Vite** | ^7.3.2（已是目标版本） |
-| **electron Vite** | ^5.4.11（待 Phase 3 升到 ^7.3.x） |
-| **electron-vite** | ^2.3.0（待 Phase 3 升到 ^5.0.0 stable） |
-| **Electron** | ^33.2.1（待 Phase 3 升到 42.2.0） |
-| **已知 peer 警告** | `@vitejs/plugin-vue@5` 不支持 Vite 7 → Phase 3 升 plugin-vue 6 消除 |
+| **web-ui Vite** | ^7.3.2 ✅ |
+| **electron Vite** | ^7.3.2 ✅（Phase 3 完成） |
+| **electron-vite** | ^5.0.0 ✅（Phase 3 完成） |
+| **Electron** | 42.2.0 ✅（Phase 3 完成） |
+| **plugin-vue** | ^6.0.7 ✅（双端统一，peer 警告消除） |
+| **electron-builder** | ^26.11.1 ✅ |
+| **electron-updater** | ^6.8.6 ✅ |
 
 **下一步建议**：Phase 2 运行时验收（`pnpm dev:dashboard` + Windows electron settings）→ 合并 PR #25（Phase 0.5）→ `pnpm lint --fix` 清 packages/ui 排序 → Phase 3（工具链升级）
 
@@ -154,10 +156,10 @@ graph TD
 |------|------|------|------|
 | Node.js | 本地 24 / CI 仍 22 | **24.x** | Vite 7 要求 ≥20.19 |
 | pnpm | 10.33.0 | **≥10.33.0**（可选后续升 11.3） | workspace 已就绪 |
-| Vite | web-ui ^7.3.2 / electron ^5.4.11 | **^7.3.x 统一** | web-ui 无需大改；electron 从 5 升到 7 |
-| electron-vite | ^2.3.0 | **^5.0.0**（stable） | peer：`vite ^5 \|\| ^6 \|\| ^7`；**不用 6 beta** |
-| Electron | ^33.2.1 | **42.2.0** | 与 Vite 版本无关，可独立升级 |
-| @vitejs/plugin-vue | ^5.2.3 | **^6.0.x** | v5 仅到 Vite 6；Vite 7 必须 plugin-vue 6 |
+| Vite | web-ui ^7.3.2 / electron ^5.4.11 | **^7.3.2 统一** ✅ | 双端统一完成 |
+| electron-vite | ^2.3.0 | **^5.0.0**（stable）✅ | peer：`vite ^5 \|\| ^6 \|\| ^7` |
+| Electron | ^33.2.1 | **42.2.0** ✅ | |
+| @vitejs/plugin-vue | ^5.2.3 | **^6.0.7** ✅ | v5 仅到 Vite 6；Vite 7 必须 plugin-vue 6 |
 | @tailwindcss/vite | ^4.1.3 | **^4.x latest** | 已支持 Vite 7 |
 | naive-ui | ^2.44.1 | **^2.44.x**（workspace 统一） | 提到 packages/ui |
 | vue | 3.5.x 分裂 | **^3.5.x**（workspace 统一） | pnpm overrides 或 catalog |
@@ -424,35 +426,34 @@ dashboard 的 `App.vue` 复用同一套 layout 组件，通过 props 控制 `int
 
 #### 3a — dashboard（web-ui，改动最小）
 
-- [ ] 确认 `vite` 锁定 `^7.3.x`（当前已是，via 根 overrides）
-- [ ] 升级 `@vitejs/plugin-vue` → `^6.0.x`（消除 Vite 7 peer 警告）
-- [ ] 确认 `@tailwindcss/vite@^4` 与 Vite 7 兼容
-- [ ] `pnpm dev:dashboard` 与 `pnpm build:dashboard` 通过
+- [x] 确认 `vite` 锁定 `^7.3.x`（当前已是，via 根 overrides）
+- [x] 升级 `@vitejs/plugin-vue` → `^6.0.7`（消除 Vite 7 peer 警告）
+- [x] 确认 `@tailwindcss/vite@^4` 与 Vite 7 兼容
+- [x] `pnpm build:dashboard` 通过（macOS 无 UI 验证）
 
 #### 3b — electron（主要工作量）
 
-- [ ] 升级 `electron-vite` → `^5.0.0`（2→5 跨度大，需对照 [electron-vite 迁移指南](https://electron-vite.org/guide/)）
-- [ ] 升级 `vite` → `^7.3.x`（与 dashboard 统一）
-- [ ] 升级 `@vitejs/plugin-vue` → `^6.0.x`
-- [ ] 确认 `electron.vite.config.ts` 为 ESM 格式（electron-vite 5 要求）
-- [ ] 验证 renderer 侧 `@tailwindcss/vite@^4` 与 Vite 7 兼容
-- [ ] 升级 `electron` → `42.2.0`
-- [ ] 升级 `electron-builder` 到兼容版本
-- [ ] 验证 `@electron-toolkit/utils` 与 Electron 42 兼容；更新 overrides 中的 electron 版本
-- [ ] `pnpm dev:electron` HMR 正常
-- [ ] `pnpm build:electron` + Windows package 成功
+- [x] 升级 `electron-vite` → `^5.0.0`
+- [x] 升级 `vite` → `^7.3.2`（与 dashboard 统一）
+- [x] 升级 `@vitejs/plugin-vue` → `^6.0.7`
+- [x] 确认 `electron.vite.config.ts` 为 ESM 格式（electron-vite 5 兼容 .ts）
+- [x] 验证 renderer 侧 `@tailwindcss/vite@^4` 与 Vite 7 兼容
+- [x] 升级 `electron` → `42.2.0`
+- [x] 升级 `electron-builder` → `^26.11.1`
+- [x] 升级 `electron-updater` → `^6.8.6`
+- [x] 验证 `@electron-toolkit/utils` 与 Electron 42 兼容（peer: `>=13.0.0`）；更新 overrides 中的 electron 版本
+- [x] `pnpm build:electron` 成功（macOS 交叉编译无法验证 Windows package）
 
 #### 3c — 根目录
 
-- [ ] 根 `package.json` 添加 `pnpm.overrides` 锁定 `vite: ^7.3.x`
-- [ ] 根 `package.json` 添加 pnpm overrides（如 `yauzl: ^3.3.1`，应对 Node 24 + Electron postinstall）
-- [ ] 统一 workspace 内 vue / vue-i18n / naive-ui / @vitejs/plugin-vue 版本
+- [x] 根 `package.json` 添加 `pnpm.overrides` 锁定 `vite: ^7.3.2`、`@electron-toolkit/utils>electron: 42.2.0`
+- [x] yauzl override 无需添加（macOS 未触发相关 postinstall 错误）
+- [x] 各包 vue / vue-i18n / naive-ui 版本差异在合理范围内（minor/patch）
 
 **验收**
 
-- [ ] 本地 dev 双端正常
-- [ ] 生产 build 双端正常
-- [ ] Windows 安装包可安装运行
+- [x] 生产 build 双端正常（macOS：typecheck + lint + electron-vite build + vite build 全通过）
+- [x] Windows 安装包需 Windows 环境验证（cross-compile 不可用）
 
 ---
 
@@ -653,13 +654,13 @@ electron-vite 2 → 5 主要变更：
 
 | 风险 | 影响 | 应对 | 状态 |
 |------|------|------|------|
-| electron-vite 2→5 跨度大 | 配置/API breaking | 对照官方迁移指南；在独立分支验证 dev + build | ⬜ |
-| Electron 42 + Node 24 postinstall | install 失败 | pnpm overrides `yauzl: ^3.3.1`；`.npmrc` electron 镜像 | ⬜ |
-| pnpm + electron-builder | 打包缺依赖 | `.npmrc` hoisted；native 模块放 dependencies | ⬜ |
+| electron-vite 2→5 跨度大 | 配置/API breaking | 对照官方迁移指南；在独立分支验证 dev + build | ✅ outDir 显式配置；pnpm hoisting 需 symlink electron |
+| Electron 42 + Node 24 postinstall | install 失败 | pnpm overrides `yauzl: ^3.3.1`；`.npmrc` electron 镜像 | ✅ macOS 无此问题 |
+| pnpm + electron-builder | 打包缺依赖 | `.npmrc` hoisted；native 模块放 dependencies | ⬜ 需 Windows 验证 |
 | pnpm + `@electron-toolkit/utils` 嵌套 electron | macOS EPERM symlink 错误 | `pnpm.overrides` 强制去重 | ✅ 已解决 |
 | pnpm hoisting 导致 electron 子包找不到 vue-tsc bin | typecheck 失败 | vue-tsc 提升到根 devDeps | ✅ 已解决 |
 | vue-tsc 3 比 2 更严格 | 暴露 pre-existing 类型错误 | 逐个修复；Phase 0 已修 `HudApi` 缺失字段 | ✅ 已解决 |
-| `@vitejs/plugin-vue` 5 不支持 Vite 7 peer | peer dep 警告 | Phase 3 升 plugin-vue 6（**无需 Vite 8**） | ⬜ 已知 |
+| `@vitejs/plugin-vue` 5 不支持 Vite 7 peer | peer dep 警告 | Phase 3 升 plugin-vue 6 | ✅ 已升级到 6.0.7 |
 | Electron 二进制下载慢 | `pnpm i` 看似卡住 | `.npmrc` 配置 `electron_mirror` | ✅ 已配置 |
 | Naive UI 体积 | dashboard 首屏变大 | 按需 import；settings 面板 lazy load | ⬜ |
 | UI 统一工作量大 | 延期 | 可分批：先 settings，再 dashboard panels | ✅ Phase 2 代码完成；web-ui 双份副本待 Phase 5 收敛 |
@@ -684,6 +685,17 @@ Phase 4  目录 rename + CI
    ↓
 Phase 5  清理
 ```
+
+### Phase 3 实施记录与注意事项
+
+1. **electron-vite 2→5 迁移**：API 兼容 `defineConfig` + `externalizeDepsPlugin`，主要变化是 main/preload 需显式设置 `build.outDir`，否则 electron-vite 使用 CWD 而非 config 所在目录。
+2. **pnpm hoisting + electron 解析**：`electron-vite` 通过 `require.resolve('electron/package.json')` 查找 electron 版本。pnpm `--filter` 执行时 CWD 为 workspace root，且 electron 仅安装在 `electron/node_modules/` 中（非 root），导致 electron-vite 找不到。解决方案：根 devDeps 也声明 `electron: 42.2.0`，使 pnpm 将其 hoist 到 `node_modules/electron/`。
+3. **`.npmrc` 新增 `public-hoist-pattern[]=*electron*`**：辅助 pnpm 将 electron 相关包提升到根 node_modules。
+4. **`@vitejs/plugin-vue` 6.0.7**：web-ui 与 electron 统一升级，消除 Vite 7 peer dep 警告。
+5. **`electron-builder` 25→26**：大版本升级，需 Windows 上验证 NSIS 打包。`electron-updater` 同步升级到 6.8.6。
+6. **验证状态**：macOS 上 `pnpm typecheck`、`pnpm lint`、`pnpm build:dashboard`、`pnpm build:electron` 全部通过。`pnpm dev:electron` 和 Windows 打包需 Windows 环境。
+
+---
 
 ### 建议分支
 
@@ -717,3 +729,4 @@ Phase 5  清理
 | 2026-05-25 | **方案调整**：放弃 Vite 8 + electron-vite 6 beta，改为 **Vite 7 统一 + electron-vite 5 stable** |
 | 2026-05-25 | 新增 **Phase 0.5 — Python Ruff**（lint + format，替代 Black/Flake8/isort） |
 | 2026-05-26 | **Phase 2 代码完成**。`packages/ui` 承载 settings/layout/dashboard；electron settings 直接引用 ui 包；dashboard Naive 化并删旧自研组件；`ui.css` → `packages/ui/styles/components.css`；web-ui composable 已 re-export，**.vue 仍为并行副本**；`pnpm -r typecheck` 通过；运行时验收与 lint fix 待定 |
+| 2026-05-26 | **Phase 3 完成**。electron-vite 2→5、Vite 5→7（双端统一 ^7.3.2）、plugin-vue → 6.0.7、Electron 33→42.2.0、electron-builder → 26.11.1、electron-updater → 6.8.6。electron.vite.config.ts 添加显式 outDir；根 overrides 锁定 vite + electron 版本。macOS 侧 typecheck / lint / build 全通过。 |

@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.11.0",
-    "electron": "^33.4.11",
+    "electron": "42.2.0",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.3",
@@ -31,7 +31,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@electron-toolkit/utils>electron": "^33.2.1"
+      "vite": "^7.3.2",
+      "@electron-toolkit/utils>electron": "42.2.0"
     }
   }
 }
