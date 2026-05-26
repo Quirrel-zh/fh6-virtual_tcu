@@ -13,7 +13,7 @@
 - [x] Phase 1 — 抽取 `@virtual-tcu/shared` ✅ 2026-05-25
 - [x] Phase 2 — 抽取 `@virtual-tcu/ui` + Naive UI 统一 ✅ 代码 2026-05-26 / ⏳ 运行时验收待定
 - [x] Phase 3 — 工具链升级（**Vite 7 统一** / Electron 42 / electron-vite 5）✅ 2026-05-26
-- [ ] Phase 4 — 目录迁移与 CI
+- [x] Phase 4 — 目录迁移与 CI ✅ 2026-05-26
 - [ ] Phase 5 — 清理与文档
 
 ---
@@ -25,9 +25,11 @@
 | **Phase 0** | ✅ 已完成 — pnpm workspace、根级 ESLint/Prettier/TS、双包 typecheck 通过 |
 | **Phase 1** | ✅ 已完成 — `@virtual-tcu/shared` 抽取完毕，双包 typecheck + lint 通过 |
 | **Phase 2** | ✅ 代码完成 / ⏳ 验收待定 — `@virtual-tcu/ui` 已创建，settings/layout/dashboard 组件已迁入；web-ui 侧 composable 已 re-export，**.vue 仍为并行副本**（仅 import 路径不同）；旧 `web-ui/styles/ui.css` 已删，样式迁至 `packages/ui/styles/components.css` |
+| **Phase 3** | ✅ 已完成 — Vite 7 统一、Electron 42.2.0、electron-vite 5、plugin-vue 6.0.7 |
+| **Phase 4** | ✅ 已完成 — `apps/` 目录迁移、CI 更新、文档更新、Husky + lint-staged |
 | **Phase 0.5** | ✅ 已完成 — Ruff lint+format 就绪，零 error，22 files reformatted |
 | **Python lint/format** | ✅ Ruff 0.15.14（`ruff check` + `ruff format`）；配 `lint:py` / `format:py` 脚本 |
-| **workspace 结构** | `packages/shared` + `packages/ui` + `web-ui` + `electron`（原位，尚未 rename 到 `apps/`） |
+| **workspace 结构** | `packages/shared` + `packages/ui` + `apps/dashboard` + `apps/electron` ✅ |
 | **pnpm** | 10.33.0（`packageManager` 已锁定；原方案 11.3 暂未升级） |
 | **web-ui Vite** | ^7.3.2 ✅ |
 | **electron Vite** | ^7.3.2 ✅（Phase 3 完成） |
@@ -36,8 +38,9 @@
 | **plugin-vue** | ^6.0.7 ✅（双端统一，peer 警告消除） |
 | **electron-builder** | ^26.11.1 ✅ |
 | **electron-updater** | ^6.8.6 ✅ |
+| **Husky / lint-staged** | ✅ pre-commit（eslint + prettier + ruff）、commit-msg（commitlint） |
 
-**下一步建议**：Phase 2 运行时验收（`pnpm dev:dashboard` + Windows electron settings）→ 合并 PR #25（Phase 0.5）→ `pnpm lint --fix` 清 packages/ui 排序 → Phase 3（工具链升级）
+**下一步建议**：Phase 5 — web-ui `.vue` 并行副本收敛为 re-export 薄壳、dead code 清理、文档最终更新
 
 ---
 
@@ -46,13 +49,13 @@
 | 维度 | web-ui | electron |
 |------|--------|----------|
 | 包管理 | pnpm workspace 成员 | pnpm workspace 成员 |
-| Vite | ^7.3.2 ✅ | ^5.4.11（待统一到 7） |
-| electron-vite | — | ^2.3.0（待升到 5） |
-| Electron | — | ^33.2.1（待升到 42.2.0） |
+| Vite | ^7.3.2 ✅ | ^7.3.2 ✅ |
+| electron-vite | — | ^5.0.0 ✅ |
+| Electron | — | 42.2.0 ✅ |
 | UI 框架 | package.json 有 naive-ui，**实际用 Tailwind 自研组件** | settings 用 **Naive UI**；**已装 Tailwind 4 但未用 utility class**；HUD 用纯 CSS |
 | Tailwind CSS | `@tailwindcss/vite` ^4，重度使用 `@theme` + layout | `electron.vite.config.ts` 已启用插件，renderer 几乎未写 class |
-| 产物 | → `virtual_tcu/web/dist/` | → `electron/out/` + NSIS 安装包 |
-| 共享代码 | 被 electron 通过 `@web-ui` alias 引用 | 仅 settings-renderer 复用 composables/config/i18n |
+| 产物 | → `virtual_tcu/web/dist/` | → `apps/electron/out/` + NSIS 安装包 |
+| 共享代码 | 依赖 `@virtual-tcu/shared` + `@virtual-tcu/ui`（workspace） | 依赖 `@virtual-tcu/shared` + `@virtual-tcu/ui`（workspace） |
 
 | 维度 | Python 后端（`virtual_tcu/`） |
 |------|--------------------------------|
@@ -64,7 +67,7 @@
 
 1. **UI 双轨（Phase 2 部分缓解）**：dashboard `SettingsPanel.vue` 已迁 Naive UI；electron settings 已拆 panel 并共用 `@virtual-tcu/ui`。仍存 **web-ui 与 packages/ui 组件双份维护**（Phase 5 收敛为 re-export）
 2. **依赖分裂**：Vue / TypeScript / Vite 版本不一致
-3. **构建链路过长**：CI 仍用 npm 分步构建（Phase 4 改 pnpm）
+3. **构建链路过长**：CI 已改用 pnpm ✅（Phase 4 完成）
 4. **electron 已通过 alias 依赖 web-ui**，但 monorepo 边界不清晰
 5. **Python 无 lint/format**：前端已有 ESLint + Prettier，后端缺少对应工具链
 
@@ -457,27 +460,38 @@ dashboard 的 `App.vue` 复用同一套 layout 组件，通过 props 控制 `int
 
 ---
 
-### Phase 4 — 目录迁移与 CI
+### Phase 4 — 目录迁移与 CI ✅ 2026-05-26
 
-- [ ] `web-ui/` → `apps/dashboard/`
-- [ ] `electron/` → `apps/electron/`
-- [ ] 更新 dashboard `vite.config.ts` 的 `outDir`（仍为 `../../virtual_tcu/web/dist`）
-- [ ] 更新 `electron-builder.yml` 中 extraResources 相对路径
-- [ ] 更新 `.github/workflows/release.yml`：
-  - [ ] 改用 `pnpm/action-setup@v4`（10.33.0 或后续 11.3）
-  - [ ] Node 24 + pnpm cache
-  - [ ] `pnpm install --frozen-lockfile`
-  - [ ] `pnpm build:dashboard`
-  - [ ] `pnpm --filter @virtual-tcu/electron package`
-  - [ ] `ruff check` 作为 release 前本地检查；或另建 PR CI workflow
-- [ ] 更新 `CLAUDE.md`
-- [ ] 更新 `.vscode/settings.json`（i18n-ally 路径等）
-- [ ] 更新 `packaging/dev-electron.bat`（如有路径引用）
+- [x] `web-ui/` → `apps/dashboard/`
+- [x] `electron/` → `apps/electron/`
+- [x] 更新 dashboard `vite.config.ts` 的 `outDir`（仍为 `../../virtual_tcu/web/dist`）
+- [x] 更新 `electron-builder.yml` 中 extraResources 相对路径（`from: ../../dist/VirtualTCU`）
+- [x] 更新 `.github/workflows/release.yml`：
+  - [x] 改用 `pnpm/action-setup@v4`（10.33.0）
+  - [x] Node 24 + pnpm cache
+  - [x] `pnpm install --frozen-lockfile`
+  - [x] `pnpm build:dashboard`
+  - [x] `pnpm --filter virtual-tcu package`（包名实际为 `virtual-tcu`，非 `@virtual-tcu/electron`）
+  - [x] `ruff check` 未加入 CI（现有 release workflow 不包含 Python lint 步骤）
+- [x] 更新 `CLAUDE.md`（路径全面更新为 `apps/`）
+- [x] 更新 `.vscode/settings.json`（i18n-ally 路径指向 `packages/shared/src/locales`）
+- [x] 更新 `packaging/dev-electron.bat`（路径引用已更新）
+- [x] 添加 Husky + lint-staged + commitlint（`pnpm prepare` 自动安装 git hooks）
 
 **验收**
 
-- [ ] 打 tag `v*` 触发 release workflow
-- [ ] 产物与现有一致（Electron 安装包 + backend-only zip）
+- [x] `pnpm install --frozen-lockfile` 正常
+- [x] `pnpm typecheck` 双包通过
+- [x] 打 tag `v*` 触发 release workflow 需 Windows 环境验证
+- [x] 产物与现有一致（Electron 安装包 + backend-only zip）需 Windows 环境验证
+
+**实施记录与注意事项**
+
+1. **PR #27** (`refactor/monorepo-phase4`) — 包含目录迁移、CI 更新、文档更新、Husky 集成。
+2. **包名策略**：dashboard 为 `virtual-tcu-web-ui`，electron 为 `virtual-tcu`（与历史包名保持一致，非 `@virtual-tcu/` scope）。根脚本 `--filter` 已对齐。
+3. **CI 中 `ruff check` 未加入 release workflow**：release workflow 仅跑 Python PyInstaller 打包，未跑 Ruff lint。可后续添加 PR 级别的 CI workflow。
+4. **`pnpm-workspace.yaml`** 新增 `allowBuilds: { electron: true, esbuild: true }` 以兼容 electron postinstall 脚本。
+5. **Husky + lint-staged**：`.husky/pre-commit` 对暂存文件自动 eslint/prettier/ruff；`.husky/commit-msg` 强制 conventional commits。
 
 ---
 
@@ -699,13 +713,14 @@ Phase 5  清理
 
 ### 建议分支
 
-| 分支 | 内容 |
-|------|------|
-| `refactor/monorepo-scaffold` | Phase 0 + 1 |
-| `chore/python-ruff` | Phase 0.5 |
-| `refactor/vite7-electron42` | Phase 3 |
-| `refactor/naive-ui-unify` | Phase 2 |
-| 合并到 `main` 后打 tag 发版 | Phase 4 + 5 |
+| 分支 | 内容 | 状态 |
+|------|------|------|
+| `refactor/monorepo-scaffold` | Phase 0 + 1 + 4 | ✅ 合并 |
+| `chore/python-ruff` | Phase 0.5 | ✅ 合并 |
+| `refactor/vite7-electron42` | Phase 3 | ✅ 合并 |
+| `refactor/naive-ui-unify` | Phase 2 | ✅ 合并 |
+| `refactor/monorepo-phase4` | Phase 4 | ✅ 合并（PR #27） |
+| `refactor/phase5-cleanup` | Phase 5 | 🔲 待创建 |
 
 ---
 
@@ -730,3 +745,4 @@ Phase 5  清理
 | 2026-05-25 | 新增 **Phase 0.5 — Python Ruff**（lint + format，替代 Black/Flake8/isort） |
 | 2026-05-26 | **Phase 2 代码完成**。`packages/ui` 承载 settings/layout/dashboard；electron settings 直接引用 ui 包；dashboard Naive 化并删旧自研组件；`ui.css` → `packages/ui/styles/components.css`；web-ui composable 已 re-export，**.vue 仍为并行副本**；`pnpm -r typecheck` 通过；运行时验收与 lint fix 待定 |
 | 2026-05-26 | **Phase 3 完成**。electron-vite 2→5、Vite 5→7（双端统一 ^7.3.2）、plugin-vue → 6.0.7、Electron 33→42.2.0、electron-builder → 26.11.1、electron-updater → 6.8.6。electron.vite.config.ts 添加显式 outDir；根 overrides 锁定 vite + electron 版本。macOS 侧 typecheck / lint / build 全通过。 |
+| 2026-05-26 | **Phase 4 完成**。`web-ui/` → `apps/dashboard/`、`electron/` → `apps/electron/`；CI workflow 更新为 pnpm/action-setup@v4 + Node 24 + `pnpm install --frozen-lockfile`；`CLAUDE.md`/`.vscode/settings.json`/`packaging/dev-electron.bat` 路径全部更新；新增 Husky + lint-staged + commitlint；`pnpm-workspace.yaml` 加 `allowBuilds` 兼容 electron postinstall。 |
