@@ -1,5 +1,5 @@
 from virtual_tcu.config.constants import Cfg
-from virtual_tcu.input.keyboard import VirtualKeyboard
+from virtual_tcu.input.interface import OutputInterface
 from virtual_tcu.telemetry.model import Telemetry
 
 
@@ -8,7 +8,7 @@ class ReverseHoldDetector:
     1st → engage R; hold E in R while stopped → exit to 1st. Requires
     paddle release between actions to prevent re-triggering."""
 
-    def __init__(self, kb: VirtualKeyboard):
+    def __init__(self, kb: OutputInterface):
         self._kb = kb
         self._down_pressed_since: float | None = None
         self._up_pressed_since: float | None = None

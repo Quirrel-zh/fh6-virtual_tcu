@@ -1,5 +1,7 @@
 import asyncio
 import json
+import os
+import sys
 import time
 from pathlib import Path
 
@@ -155,6 +157,13 @@ class WebServer:
                 "config": self._config.data,
             }
             await ws.send_json({"type": "profile_export", "data": export})
+        elif t == "restart_backend":
+            # Send ack before restarting — the process will be replaced imminently.
+            await ws.send_json({"type": "restart_ack"})
+            # Small delay so the WS frame is flushed before execv.
+            await asyncio.sleep(0.1)
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+
         elif t == "import_profile":
             try:
                 imported = msg.get("data", {})

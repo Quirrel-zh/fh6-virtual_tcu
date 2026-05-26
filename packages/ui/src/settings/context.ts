@@ -59,6 +59,9 @@ export interface SettingsContext {
   featureToggles: Array<{ key: string; i18nKey: string }>
   hotkeyFields: Array<{ key: string; i18nKey: string; placeholder: string }>
   shiftKeyFields: Array<{ key: string; i18nKey: string; placeholder: string }>
+  outputModeOptions: ReadonlyArray<{ value: string; i18nKey: string }>
+  gamepadButtonOptions: ReadonlyArray<{ value: string; label: string }>
+  gamepadButtonFields: ReadonlyArray<{ key: string; i18nKey: string; placeholder: string }>
   settingsSliders: Ref<SliderDef[]>
   advancedSliders: Ref<SliderDef[]>
   statusLabel: Ref<{ text: string; kind: 'success' | 'warning' | 'error' }>
@@ -84,6 +87,7 @@ export interface SettingsContext {
   onExportProfile: () => void
   onOpenImport: () => void
   openDashboard: () => void
+  restartBackend: () => void
   toggleHud: () => void
   openGithub: () => void
   updater: {

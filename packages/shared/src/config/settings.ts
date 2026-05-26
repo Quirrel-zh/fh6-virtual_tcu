@@ -32,7 +32,15 @@ export interface SliderDef {
 }
 
 export const SETTING_SLIDERS: SliderDef[] = [
-  { key: 'launch_rpm', i18nKey: 'launchRpm', min: 2000, max: 8000, step: 100, unit: 'rpm', panel: 'settings' },
+  {
+    key: 'launch_rpm',
+    i18nKey: 'launchRpm',
+    min: 2000,
+    max: 8000,
+    step: 100,
+    unit: 'rpm',
+    panel: 'settings',
+  },
   { key: 'comfort_up_wot', i18nKey: 'comfortUpWot', min: 50, max: 95, panel: 'settings' },
   { key: 'dynamic_up_wot', i18nKey: 'dynamicUpWot', min: 60, max: 98, panel: 'settings' },
   {
@@ -46,7 +54,14 @@ export const SETTING_SLIDERS: SliderDef[] = [
   { key: 'offroad_up_wot', i18nKey: 'offroadUpWot', min: 75, max: 98, panel: 'settings' },
   { key: 'offroad_down_rpm', i18nKey: 'offroadDownRpm', min: 35, max: 70, panel: 'settings' },
   { key: 'brake_thr', i18nKey: 'brakeThr', min: 20, max: 80, panel: 'settings' },
-  { key: 'cornering_yaw', i18nKey: 'corneringYaw', min: 10, max: 50, unit: 'raw', panel: 'settings' },
+  {
+    key: 'cornering_yaw',
+    i18nKey: 'corneringYaw',
+    min: 10,
+    max: 50,
+    unit: 'raw',
+    panel: 'settings',
+  },
   { key: 'comfort_up_idle', i18nKey: 'comfortUpIdle', min: 20, max: 70, panel: 'extras' },
   { key: 'comfort_up_mid', i18nKey: 'comfortUpMid', min: 30, max: 85, panel: 'extras' },
   { key: 'dynamic_up_idle', i18nKey: 'dynamicUpIdle', min: 30, max: 80, panel: 'extras' },
@@ -75,7 +90,30 @@ export const NETWORK_FIELDS = [
   { key: 'web_port', i18nKey: 'webPort', placeholder: '8765', maxlength: 5 },
 ] as const
 
-export const SETTING_GROUPS: { i18nKey: string, keys: string[], hintKey?: string }[] = [
+export const OUTPUT_MODE_OPTIONS = [
+  { value: 'keyboard', i18nKey: 'outputModeKeyboard' },
+  { value: 'gamepad', i18nKey: 'outputModeGamepad' },
+] as const
+
+export const GAMEPAD_BUTTON_OPTIONS = [
+  { value: 'A', label: 'A (底部)' },
+  { value: 'B', label: 'B (右侧)' },
+  { value: 'X', label: 'X (左侧)' },
+  { value: 'Y', label: 'Y (顶部)' },
+  { value: 'LB', label: 'LB (左肩键)' },
+  { value: 'RB', label: 'RB (右肩键)' },
+  { value: 'DPAD_UP', label: '十字键 上' },
+  { value: 'DPAD_DOWN', label: '十字键 下' },
+  { value: 'DPAD_LEFT', label: '十字键 左' },
+  { value: 'DPAD_RIGHT', label: '十字键 右' },
+] as const
+
+export const GAMEPAD_BUTTON_FIELDS = [
+  { key: 'gamepad_shift_up', i18nKey: 'gamepadShiftUp', placeholder: 'B' },
+  { key: 'gamepad_shift_down', i18nKey: 'gamepadShiftDown', placeholder: 'X' },
+] as const
+
+export const SETTING_GROUPS: { i18nKey: string; keys: string[]; hintKey?: string }[] = [
   { i18nKey: 'launchControl', keys: ['launch_rpm'] },
   { i18nKey: 'comfort', keys: ['comfort_up_wot'] },
   { i18nKey: 'dynamic', keys: ['dynamic_up_wot'] },

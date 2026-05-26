@@ -5,7 +5,10 @@ import { useTcuStore } from '@virtual-tcu/shared/composables/useTcuStore'
 import { DRIVE_MODES } from '@virtual-tcu/shared/config/modes'
 import {
   FEATURE_TOGGLES,
+  GAMEPAD_BUTTON_FIELDS,
+  GAMEPAD_BUTTON_OPTIONS,
   HOTKEY_FIELDS,
+  OUTPUT_MODE_OPTIONS,
   SETTING_SLIDERS,
   SHIFT_KEY_FIELDS,
 } from '@virtual-tcu/shared/config/settings'
@@ -46,6 +49,14 @@ export function useSettingsApp() {
   const featureToggles = FEATURE_TOGGLES
   const hotkeyFields = HOTKEY_FIELDS
   const shiftKeyFields = SHIFT_KEY_FIELDS
+  const outputModeOptions = OUTPUT_MODE_OPTIONS
+  const gamepadButtonFields = GAMEPAD_BUTTON_FIELDS
+  const gamepadButtonOptions = GAMEPAD_BUTTON_OPTIONS
+
+  const restartBackend = () => {
+    const api = (window as unknown as { tcu?: { restartBackend?: () => Promise<void> } }).tcu
+    api?.restartBackend?.()
+  }
   const network = useNetworkSettings(() => store.config)
 
   const settingsSliders = computed<SliderDef[]>(() =>
@@ -208,6 +219,9 @@ export function useSettingsApp() {
     featureToggles,
     hotkeyFields,
     shiftKeyFields,
+    outputModeOptions,
+    gamepadButtonFields,
+    gamepadButtonOptions,
     networkDraftHost: network.draftHost,
     networkDraftWebPort: network.draftWebPort,
     networkDraftUdpPort: network.draftUdpPort,
@@ -234,6 +248,7 @@ export function useSettingsApp() {
     onExportProfile,
     onOpenImport,
     openDashboard,
+    restartBackend,
     toggleHud,
     openGithub,
     updater,

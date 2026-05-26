@@ -9,7 +9,7 @@ export default antfu(
     formatters: false,
 
     rules: {
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
       '@typescript-eslint/no-explicit-any': 0,
     },
 

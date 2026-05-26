@@ -5,9 +5,12 @@ import keyboard
 
 from virtual_tcu.config.constants import Cfg
 from virtual_tcu.config.store import ConfigStore
+from virtual_tcu.input.interface import OutputInterface
 
 
-class VirtualKeyboard:
+class KeyboardOutput(OutputInterface):
+    """Inject shift commands as keyboard key-presses (E / Q by default)."""
+
     def __init__(self, config: ConfigStore):
         self._config = config
         self._self_press_until: dict[str, float] = {}

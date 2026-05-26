@@ -12,7 +12,7 @@ from virtual_tcu.deps import WINSOUND_OK, winsound
 from virtual_tcu.detectors.airtime import AirtimeDetector
 from virtual_tcu.detectors.reverse_hold import ReverseHoldDetector
 from virtual_tcu.detectors.yaw_transient import YawTransientDetector
-from virtual_tcu.input.keyboard import VirtualKeyboard
+from virtual_tcu.input.interface import OutputInterface
 from virtual_tcu.integrations.discord import DiscordRPC
 from virtual_tcu.learning.drive_style import DriveStyleTracker
 from virtual_tcu.learning.gear_ratio import GearRatioCalibrator
@@ -30,7 +30,7 @@ from virtual_tcu.telemetry.model import Telemetry
 class TCULogic:
     def __init__(
         self,
-        kb: VirtualKeyboard,
+        kb: OutputInterface,
         profiles: ProfileStore,
         config: ConfigStore,
         logger: TelemetryLogger,

@@ -2,3 +2,9 @@
 keyboard>=0.13.5
 aiohttp>=3.9.0
 pypresence>=4.3.0
+vgamepad>=0.1.0
+# ^ NOTE: pip installing vgamepad auto-launches the ViGEmBus driver installer.
+#   To skip that (e.g. in CI / headless), set before pip install:
+#     $env:VGAMEPAD_SKIP_VIGEMBUS_INSTALL="true"   (PowerShell)
+#     set VGAMEPAD_SKIP_VIGEMBUS_INSTALL=true        (CMD)
+#   The driver is a one-time system install. Many gaming tools already ship it.

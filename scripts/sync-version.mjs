@@ -25,11 +25,10 @@ const jsonTargets = [
 for (const rel of jsonTargets) {
   const path = resolve(root, rel)
   const pkg = JSON.parse(readFileSync(path, 'utf-8'))
-  if (pkg.version === version)
-    continue
+  if (pkg.version === version) continue
   pkg.version = version
   writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`)
-  console.log(`sync-version: ${rel} → ${version}`)
+  console.info(`sync-version: ${rel} → ${version}`)
 }
 
 const pyprojectPath = resolve(root, 'pyproject.toml')
@@ -37,7 +36,7 @@ const pyproject = readFileSync(pyprojectPath, 'utf-8')
 const pyprojectNext = pyproject.replace(/^version = "[^"]*"/m, `version = "${version}"`)
 if (pyprojectNext !== pyproject) {
   writeFileSync(pyprojectPath, pyprojectNext)
-  console.log(`sync-version: pyproject.toml → ${version}`)
+  console.info(`sync-version: pyproject.toml → ${version}`)
 }
 
 const initPath = resolve(root, 'virtual_tcu/__init__.py')
@@ -45,5 +44,5 @@ const init = readFileSync(initPath, 'utf-8')
 const initNext = init.replace(/^__version__ = "[^"]*"/m, `__version__ = "${version}"`)
 if (initNext !== init) {
   writeFileSync(initPath, initNext)
-  console.log(`sync-version: virtual_tcu/__init__.py → ${version}`)
+  console.info(`sync-version: virtual_tcu/__init__.py → ${version}`)
 }

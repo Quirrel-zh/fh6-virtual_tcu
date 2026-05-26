@@ -11,7 +11,8 @@ from virtual_tcu.config.constants import Cfg
 from virtual_tcu.config.store import ConfigStore
 from virtual_tcu.config.web_bind import format_startup_urls, web_urls
 from virtual_tcu.deps import AIOHTTP_OK
-from virtual_tcu.input.keyboard import VirtualKeyboard
+from virtual_tcu.input import KeyboardOutput
+from virtual_tcu.input.gamepad_output import GamepadOutput
 from virtual_tcu.logic.tcu import TCULogic
 from virtual_tcu.storage.profiles import ProfileStore
 from virtual_tcu.telemetry.logger import TelemetryLogger
@@ -133,7 +134,20 @@ def main():
     config = ConfigStore()
     profiles = ProfileStore()
     logger = TelemetryLogger()
-    kb = VirtualKeyboard(config)
+    output_mode = config.get("output_mode", "keyboard")
+
+    if output_mode == "gamepad":
+        try:
+            kb = GamepadOutput(config)
+        except RuntimeError as e:
+            print(f"[ERROR] {e}")
+            print("        Falling back to keyboard output.")
+            kb = KeyboardOutput(config)
+            # Persist the fallback so the next launch doesn't hit the same error.
+            config.set("output_mode", "keyboard")
+    else:
+        kb = KeyboardOutput(config)
+
     tcu = TCULogic(kb, profiles, config, logger)
     setup_hotkeys(tcu, config, logger)
 

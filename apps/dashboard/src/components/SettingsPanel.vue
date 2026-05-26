@@ -6,7 +6,10 @@
   import { computed, toRefs } from 'vue'
   import {
     FEATURE_TOGGLES,
+    GAMEPAD_BUTTON_FIELDS,
+    GAMEPAD_BUTTON_OPTIONS,
     HOTKEY_FIELDS,
+    OUTPUT_MODE_OPTIONS,
     SETTING_GROUPS,
     SHIFT_KEY_FIELDS,
   } from '@/config/settings'
@@ -41,6 +44,7 @@
     'resetConfig',
     'exportProfile',
     'openImport',
+    'restartBackend',
   ])
 
   const { config, telemetry, sessionStats, shiftHistory, visibleTabs } = toRefs(props)
@@ -357,6 +361,57 @@
                 <NButton @click="emit('openImport')">
                   {{ $t('extras.import') }}
                 </NButton>
+              </NFlex>
+            </NCard>
+
+            <NCard :title="$t('extras.outputMode')" size="small" :bordered="false">
+              <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 8px">
+                {{ $t('extras.outputModeHint') }}
+              </NText>
+              <NSelect
+                :value="($props.config as any).output_mode || 'keyboard'"
+                :options="
+                  OUTPUT_MODE_OPTIONS.map((o) => ({
+                    label: $t(`extras.${o.i18nKey}`),
+                    value: o.value,
+                  }))
+                "
+                size="small"
+                style="width: 200px"
+                @update:value="(v) => emit('setConfig', 'output_mode', v)"
+              />
+              <template v-if="(($props.config as any).output_mode || 'keyboard') === 'gamepad'">
+                <NText depth="3" style="font-size: 12px; display: block; margin: 12px 0 8px">
+                  {{ $t('extras.gamepadButtonHint') }}
+                </NText>
+                <NFlex vertical :size="10">
+                  <NFlex
+                    v-for="g in GAMEPAD_BUTTON_FIELDS"
+                    :key="g.key"
+                    justify="space-between"
+                    align="center"
+                    :size="8"
+                  >
+                    <NText>{{ $t(`extras.${g.i18nKey}`) }}</NText>
+                    <NSelect
+                      :value="configText(g.key) || g.placeholder"
+                      :options="
+                        GAMEPAD_BUTTON_OPTIONS.map((o) => ({ label: o.label, value: o.value }))
+                      "
+                      size="small"
+                      style="width: 140px"
+                      @update:value="(v) => emit('setConfig', g.key, v)"
+                    />
+                  </NFlex>
+                </NFlex>
+              </template>
+              <NFlex :size="8" align="center" style="margin-top: 10px">
+                <NButton type="warning" size="small" @click="emit('restartBackend')">
+                  {{ $t('extras.saveAndRestart') }}
+                </NButton>
+                <NText depth="3" style="font-size: 11px; color: #d97706">
+                  {{ $t('extras.outputModeRestart') }}
+                </NText>
               </NFlex>
             </NCard>
 
