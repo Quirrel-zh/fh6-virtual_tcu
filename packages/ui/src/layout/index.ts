@@ -1,0 +1,8 @@
+export { GITHUB_REPO_URL } from './app-footer'
+export { connectionDotClass, headerProps, useHeaderConnectionKey } from './app-header'
+export { default as AppFooter } from './AppFooter.vue'
+export { default as AppHeader } from './AppHeader.vue'
+export { localeOptions, onLocaleChange } from './locale-switcher'
+export { default as LocaleSwitcher } from './LocaleSwitcher.vue'
+export { useModeSidebar } from './mode-sidebar'
+export { default as ModeSidebar } from './ModeSidebar.vue'

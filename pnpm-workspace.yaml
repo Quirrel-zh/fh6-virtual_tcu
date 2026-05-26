@@ -1,5 +1,6 @@
 packages:
   - packages/shared
+  - packages/ui
   - web-ui
   - electron
 

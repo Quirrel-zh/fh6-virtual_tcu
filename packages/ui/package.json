@@ -1,0 +1,25 @@
+{
+  "name": "@virtual-tcu/ui",
+  "type": "module",
+  "version": "13.0.1",
+  "private": true,
+  "exports": {
+    "./theme": "./src/theme.ts",
+    "./styles/ui": "./src/styles/ui.ts",
+    "./styles/components.css": "./src/styles/components.css",
+    "./components/*": "./src/components/*",
+    "./layout": "./src/layout/index.ts",
+    "./layout/*": "./src/layout/*",
+    "./dashboard": "./src/dashboard/index.ts",
+    "./dashboard/*": "./src/dashboard/*",
+    "./settings": "./src/settings/index.ts",
+    "./settings/*": "./src/settings/*"
+  },
+  "dependencies": {
+    "@vicons/ionicons5": "^0.13.0",
+    "@virtual-tcu/shared": "workspace:*",
+    "naive-ui": "^2.44.1",
+    "vue": "^3.5.32",
+    "vue-i18n": "^11.3.2"
+  }
+}

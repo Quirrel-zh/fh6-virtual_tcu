@@ -1,0 +1,22 @@
+@theme {
+  --color-tcu-bg-0: #050505;
+  --color-tcu-bg-1: #0a0a0c;
+  --color-tcu-bg-2: #111113;
+  --color-tcu-bg-3: #18181b;
+  --color-tcu-border: #27272a;
+  --color-tcu-txt: #f4f4f5;
+  --color-tcu-txt-muted: #a1a1aa;
+  --color-tcu-txt-dim: #71717a;
+
+  --color-accent: #22c55e;
+  --color-accent-2: #3b82f6;
+  --color-warn: #eab308;
+  --color-danger: #ef4444;
+
+  --color-mode-comfort: #3b82f6;
+  --color-mode-dynamic: #a855f7;
+  --color-mode-race: #22c55e;
+  --color-mode-drift: #ef4444;
+  --color-mode-offroad: #f97316;
+  --color-mode-manual: #71717a;
+}

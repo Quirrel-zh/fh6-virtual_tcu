@@ -1,12 +1,17 @@
-<script setup>
+<script setup lang="ts">
+  import type { SessionStats, ShiftHistoryItem, TelemetrySnapshot } from '@/types/telemetry'
   import { ref, toRefs } from 'vue'
   import { col, sectionTitle, statRow, tabActive, tabBase } from '@/styles/ui'
   import { useStatsHistoryPanel } from './stats-history-panel'
 
-  const props = defineProps({
-    telemetry: { type: Object, default: null },
-    sessionStats: { type: Object, default: null },
-    shiftHistory: { type: Array, default: () => [] },
+  const props = withDefaults(defineProps<{
+    telemetry?: TelemetrySnapshot | null
+    sessionStats?: SessionStats | null
+    shiftHistory?: ShiftHistoryItem[]
+  }>(), {
+    telemetry: null,
+    sessionStats: null,
+    shiftHistory: () => [],
   })
 
   const { telemetry, sessionStats, shiftHistory } = toRefs(props)

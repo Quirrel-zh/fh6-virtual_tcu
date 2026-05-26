@@ -11,22 +11,23 @@
 - [x] Phase 0 — 基础设施 ✅ 2026-05-25
 - [ ] Phase 0.5 — Python Ruff（lint + format）
 - [x] Phase 1 — 抽取 `@virtual-tcu/shared` ✅ 2026-05-25
-- [ ] Phase 2 — 抽取 `@virtual-tcu/ui` + Naive UI 统一
+- [x] Phase 2 — 抽取 `@virtual-tcu/ui` + Naive UI 统一 ✅ 代码 2026-05-26 / ⏳ 运行时验收待定
 - [ ] Phase 3 — 工具链升级（**Vite 7 统一** / Electron 42 / electron-vite 5）
 - [ ] Phase 4 — 目录迁移与 CI
 - [ ] Phase 5 — 清理与文档
 
 ---
 
-## 当前状态快照（2026-05-25）
+## 当前状态快照（2026-05-26）
 
 | 项目 | 状态 |
 |------|------|
 | **Phase 0** | ✅ 已完成 — pnpm workspace、根级 ESLint/Prettier/TS、双包 typecheck 通过 |
 | **Phase 1** | ✅ 已完成 — `@virtual-tcu/shared` 抽取完毕，双包 typecheck + lint 通过 |
-| **Phase 0.5 / 2–5** | ⬜ 未开始 |
+| **Phase 2** | ✅ 代码完成 / ⏳ 验收待定 — `@virtual-tcu/ui` 已创建，settings/layout/dashboard 组件已迁入；web-ui 侧 composable 已 re-export，**.vue 仍为并行副本**（仅 import 路径不同）；旧 `web-ui/styles/ui.css` 已删，样式迁至 `packages/ui/styles/components.css` |
+| **Phase 0.5 / 3–5** | ⬜ 未开始 |
 | **Python lint/format** | ⬜ 无配置（`.gitignore` 已有 `.ruff_cache/` 占位，待 Phase 0.5 落地） |
-| **workspace 结构** | `packages/shared` + `web-ui` + `electron`（原位，尚未 rename 到 `apps/`） |
+| **workspace 结构** | `packages/shared` + `packages/ui` + `web-ui` + `electron`（原位，尚未 rename 到 `apps/`） |
 | **pnpm** | 10.33.0（`packageManager` 已锁定；原方案 11.3 暂未升级） |
 | **web-ui Vite** | ^7.3.2（已是目标版本） |
 | **electron Vite** | ^5.4.11（待 Phase 3 升到 ^7.3.x） |
@@ -34,7 +35,7 @@
 | **Electron** | ^33.2.1（待 Phase 3 升到 42.2.0） |
 | **已知 peer 警告** | `@vitejs/plugin-vue@5` 不支持 Vite 7 → Phase 3 升 plugin-vue 6 消除 |
 
-**下一步建议**：Phase 0.5（Ruff，独立小步）或 Phase 2（抽 UI 组件 + Naive 统一）或 Phase 3（工具链升级，可并行）
+**下一步建议**：Phase 2 运行时验收（`pnpm dev:dashboard` + Windows electron settings）→ `pnpm lint --fix` 清 packages/ui 排序 → Phase 0.5（Ruff）或 Phase 3（工具链升级）
 
 ---
 
@@ -59,7 +60,7 @@
 
 ### 核心问题
 
-1. **UI 双轨**：`SettingsPanel.vue`（Tailwind）与 `SettingsApp.vue`（Naive UI）功能重叠
+1. **UI 双轨（Phase 2 部分缓解）**：dashboard `SettingsPanel.vue` 已迁 Naive UI；electron settings 已拆 panel 并共用 `@virtual-tcu/ui`。仍存 **web-ui 与 packages/ui 组件双份维护**（Phase 5 收敛为 re-export）
 2. **依赖分裂**：Vue / TypeScript / Vite 版本不一致
 3. **构建链路过长**：CI 仍用 npm 分步构建（Phase 4 改 pnpm）
 4. **electron 已通过 alias 依赖 web-ui**，但 monorepo 边界不清晰
@@ -360,30 +361,52 @@ dashboard 的 `App.vue` 复用同一套 layout 组件，通过 props 控制 `int
 
 ### Phase 2 — 抽取 `@virtual-tcu/ui` + Naive UI 统一
 
-- [ ] 创建 `packages/ui/` 目录与 `package.json`
-- [ ] 抽取共享 `packages/ui/src/styles/theme.css`（自 `web-ui/src/styles/app.css` 的 `@theme`）
-- [ ] 抽取共享 `packages/ui/src/styles/base.css`（reset + `#app` 布局基线）
-- [ ] dashboard 与 electron settings 均 `@import` 共享样式，两端 Vite 配置保留 `tailwindcss()` 插件
-- [ ] 实现 `TcuConfigProvider.vue`（Naive theme overrides 与 Tailwind `@theme` token 对齐）
-- [ ] 从 `SettingsApp.vue` 拆分 `SettingsOverview.vue`
-- [ ] 从 `SettingsApp.vue` 拆分 `SettingsConfig.vue`
-- [ ] 从 `SettingsApp.vue` 拆分 `SettingsAdvanced.vue`
-- [ ] 从 `SettingsApp.vue` 拆分 `SettingsStats.vue`
-- [ ] 从 `SettingsApp.vue` 拆分 `SettingsHistory.vue`
-- [ ] 从 `SettingsApp.vue` 拆分 `SettingsAbout.vue`
-- [ ] 迁移 layout 组件（`AppHeader`、`AppFooter`、`ModeSidebar`）
-- [ ] 迁移 dashboard 组件（`DashboardPanel`、`StatsHistoryPanel`、`DashboardChart` 外层）
-- [ ] electron `settings-renderer` 改为薄壳，组合 `@virtual-tcu/ui`
-- [ ] web-ui dashboard 替换 Tailwind 自研组件为 Naive UI
-- [ ] 删除 `ToggleSwitch.vue`、`SettingSlider.vue`、`ConfigTextInput.vue` 等旧组件
-- [ ] 删除 `styles/ui.ts`、`styles/ui.css`（自研 component layer）；**保留** Tailwind `@theme` + layout utility
-- [ ] dashboard `main.ts` 挂载 `TcuConfigProvider`
+- [x] 创建 `packages/ui/` 目录与 `package.json`
+- [x] 抽取共享 `packages/ui/src/styles/theme.css`（自 `web-ui/src/styles/app.css` 的 `@theme`）
+- [x] 抽取共享 `packages/ui/src/styles/base.css`（reset + `#app` 布局基线）
+- [x] dashboard 与 electron settings 均 `@import` 共享样式，两端 Vite 配置保留 `tailwindcss()` 插件
+- [x] 实现 `TcuConfigProvider.vue`（Naive theme overrides 与 Tailwind `@theme` token 对齐）
+- [x] 从 `SettingsApp.vue` 拆分 `SettingsOverview.vue`
+- [x] 从 `SettingsApp.vue` 拆分 `SettingsConfig.vue`
+- [x] 从 `SettingsApp.vue` 拆分 `SettingsAdvanced.vue`
+- [x] 从 `SettingsApp.vue` 拆分 `SettingsStats.vue`
+- [x] 从 `SettingsApp.vue` 拆分 `SettingsHistory.vue`
+- [x] 从 `SettingsApp.vue` 拆分 `SettingsAbout.vue`
+- [x] 迁移 layout 组件（`AppHeader`、`AppFooter`、`ModeSidebar`）
+- [x] 迁移 dashboard 组件（`DashboardPanel`、`StatsHistoryPanel`、`DashboardChart` 外层）
+- [x] electron `settings-renderer` 改为薄壳，组合 `@virtual-tcu/ui`
+- [x] web-ui dashboard 替换 Tailwind 自研组件为 Naive UI（`SettingsPanel.vue` 已用 NTabs/NSwitch/NSlider/NInput/NCard/NButton）
+- [x] 删除 `ToggleSwitch.vue`、`SettingSlider.vue`、`ConfigTextInput.vue` 等旧组件
+- [x] 删除 `web-ui/src/styles/ui.css`；样式迁至 `packages/ui/src/styles/components.css`；`web-ui/src/styles/ui.ts` 改为 re-export
+- [x] dashboard `main.ts` 挂载 `TcuConfigProvider`
 
 **验收**
 
-- [ ] 浏览器 `:8765` 与 Electron settings 窗口视觉 / 交互一致
+- [ ] 浏览器 `:8765` dashboard 布局 / 图表 / sidebar 正常（`pnpm dev:dashboard`）
+- [ ] Electron settings 窗口 6 tab 功能完整（需 Windows 运行时验证）
+- [ ] 浏览器 `:8765` 与 Electron settings 窗口视觉 / 交互一致（**不要求 pixel-perfect**：dashboard 暗色 Tailwind vs settings 浅色 Naive，属设计差异）
 - [ ] 只读 dashboard 不能写入 config（保持现有 WS 权限模型）
-- [ ] HUD renderer 保持纯 CSS，未引入 Naive UI
+- [x] HUD renderer 保持纯 CSS，未引入 Naive UI
+- [x] `pnpm -r typecheck` 通过（web-ui + electron；`packages/ui` 无独立 typecheck 脚本，由消费者间接校验）
+- [x] `pnpm lint` 零 error（`packages/ui` 有 9 个 `perfectionist/sort-*` 待 `--fix`）
+
+**实施记录与注意事项**
+
+1. **`packages/ui` 已创建**：`package.json` 声明 exports（`./theme`、`./styles/ui`、`./styles/components.css`、`./components/*`、`./layout`、`./dashboard`、`./settings`），依赖 `naive-ui`、`vue`、`vue-i18n`、`@vicons/ionicons5`、`@virtual-tcu/shared`。`pnpm-workspace.yaml` 已纳入 `packages/ui`。
+2. **模块解析**：与 Phase 1 相同，`web-ui` / `electron` 的 tsconfig `paths` 映射 `@virtual-tcu/ui/*` → `../packages/ui/src/*`；运行时靠 workspace 依赖 + package.json `exports`。`web-ui/vite.config.ts` **未**加 Vite alias，依赖 Node 解析 exports（与 shared 策略一致）。
+3. **`TcuConfigProvider.vue`**：接受 `dark` prop；dashboard `App.vue` 传 `dark`，electron settings 不传（默认 light）。内部 `NConfigProvider` + `NMessageProvider` + `NDialogProvider` + i18n locale 切换；`tcuThemeOverrides` 与 Tailwind `@theme` token 对齐。
+4. **electron settings 拆分**：6 个 tab panel（`SettingsOverview` … `SettingsAbout`）迁入 `packages/ui/src/settings/`，`provide/inject`（`settingsContextKey` + `SettingsContext`）传递 store/actions。`SettingsApp.vue` 保留 **~220 行** shell（header、NTabs 路由、import/export `NModal`、HUD/打开 dashboard 按钮），不再 ~900 行 monolith。
+5. **dashboard `SettingsPanel.vue`**：仍在 `web-ui/src/components/`（~440 行，未迁入 packages/ui）；composable（`useSettingsPanel`、`TAB_IDS` 等）已在 `packages/ui/src/dashboard/settings-panel.ts`，web-ui 经 `./settings-panel.ts` re-export。UI 已换 Naive（`NTabs`/`NSwitch`/`NSlider`/`NInput`/`NCard`/`NFlex`）。旧自研组件已删：`ToggleSwitch`、`SettingSlider`、`ConfigTextInput` 及对应 `.ts`。
+6. **layout / dashboard 组件双份并存（Phase 5 收敛）**：
+   - **packages/ui  canonical 副本**：`layout/`（AppHeader、AppFooter、ModeSidebar、LocaleSwitcher）、`dashboard/`（DashboardPanel、DashboardChart、StatsHistoryPanel、ProfileModal）。
+   - **web-ui 并行副本**：同名 `.vue` 仍保留，逻辑与 packages/ui **几乎相同**，仅 import 路径为 `@/` vs `@virtual-tcu/shared/*`。
+   - **已 re-export 的 `.ts`**：`app-header.ts`、`mode-sidebar.ts`、`dashboard-panel.ts`、`settings-panel.ts` 等仅转发 composable，**不是** `.vue` 薄壳。
+   - Phase 5 目标：web-ui `.vue` 改为一行 `export { default } from '@virtual-tcu/ui/...'`，消除双份维护。
+7. **样式迁移**：`web-ui/src/styles/ui.css`（`@layer components`）**已删除**；等价样式在 `packages/ui/src/styles/components.css`，class token 在 `packages/ui/src/styles/ui.ts`。`web-ui/src/styles/ui.ts` 仅 re-export `@virtual-tcu/ui/styles/ui`。`web-ui/src/styles/app.css` 引入 `theme.css` + `components.css` + 本地 base reset。electron settings 仍用 `styles.css` 最小 reset（浅色 Naive），**未** import dashboard 暗色 theme。
+8. **类型**：`SettingsContext` 中 `statsRows` / `historyItems` 需具体接口（`StatsRows`、`ShiftHistoryItem`），已在 `packages/ui/src/settings/context.ts` 定义；electron `provide(..., ctx as any)` 为临时写法，后续可收紧。
+9. **`<script setup lang="ts">`**：迁移后 **packages/ui 与 web-ui 的 dashboard 组件均使用 `lang="ts"`**（与 packages/ui 保持一致）。若 web-ui 收敛为 re-export 薄壳，可恢复无 `lang` 的 `.vue` + 同名 `.ts` 承载类型的惯例。
+10. **lint 遗留**：2026-05-26 检查时 `pnpm lint` 在 `packages/ui` 报 9 个 import/export 排序 error（均可 `--fix`），不影响 typecheck。
+11. **HUD 未动**：`electron/src/hud-renderer/` 仍为 scoped 纯 CSS，无 Naive / Tailwind。
 
 ---
 
@@ -452,7 +475,8 @@ dashboard 的 `App.vue` 复用同一套 layout 组件，通过 props 控制 `int
 ### Phase 5 — 清理与文档
 
 - [ ] 删除 `@web-ui` path alias 及相关 tsconfig 配置
-- [ ] 删除未使用的 Tailwind `@layer components`（自研 ui.css）；保留 `@theme` + layout utility
+- [ ] web-ui layout/dashboard `.vue` 改为 `@virtual-tcu/ui` re-export 薄壳（当前为并行副本，见 Phase 2 注意事项 §6）
+- [ ] 删除未使用的 Tailwind `@layer components` 冗余（canonical 在 `packages/ui/styles/components.css`）；保留 `@theme` + layout utility
 - [ ] 统一 monorepo 版本号策略（根 version 或 changesets）
 - [ ] （可选）添加 `turbo.json` 缓存 build
 - [ ] 更新 `README.md` / `README.zh-CN.md` 开发指引
@@ -630,7 +654,7 @@ electron-vite 2 → 5 主要变更：
 | `@vitejs/plugin-vue` 5 不支持 Vite 7 peer | peer dep 警告 | Phase 3 升 plugin-vue 6（**无需 Vite 8**） | ⬜ 已知 |
 | Electron 二进制下载慢 | `pnpm i` 看似卡住 | `.npmrc` 配置 `electron_mirror` | ✅ 已配置 |
 | Naive UI 体积 | dashboard 首屏变大 | 按需 import；settings 面板 lazy load | ⬜ |
-| UI 统一工作量大 | 延期 | 可分批：先 settings，再 dashboard panels | ⬜ |
+| UI 统一工作量大 | 延期 | 可分批：先 settings，再 dashboard panels | ✅ Phase 2 代码完成；web-ui 双份副本待 Phase 5 收敛 |
 | Ruff 首次 format 大 diff | review 困难、与功能 PR 冲突 | 独立 `chore/python-ruff` 分支/PR | ⬜ |
 
 ---
@@ -684,3 +708,4 @@ Phase 5  清理
 | 2026-05-25 | **Phase 0 完成**。pnpm workspace 就绪，ESLint/Prettier/TS 统一到根级，双包 typecheck 通过 |
 | 2026-05-25 | **方案调整**：放弃 Vite 8 + electron-vite 6 beta，改为 **Vite 7 统一 + electron-vite 5 stable** |
 | 2026-05-25 | 新增 **Phase 0.5 — Python Ruff**（lint + format，替代 Black/Flake8/isort） |
+| 2026-05-26 | **Phase 2 代码完成**。`packages/ui` 承载 settings/layout/dashboard；electron settings 直接引用 ui 包；dashboard Naive 化并删旧自研组件；`ui.css` → `packages/ui/styles/components.css`；web-ui composable 已 re-export，**.vue 仍为并行副本**；`pnpm -r typecheck` 通过；运行时验收与 lint fix 待定 |

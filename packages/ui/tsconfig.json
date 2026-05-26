@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@ui/*": ["src/*"],
+      "@virtual-tcu/shared/*": ["../shared/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue", "env.d.ts"],
+  "exclude": ["node_modules"]
+}

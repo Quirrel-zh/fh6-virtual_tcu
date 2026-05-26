@@ -1,14 +1,17 @@
-<script setup>
+<script setup lang="ts">
+  import type { TelemetrySnapshot } from '@/types/telemetry'
   import { computed, toRefs } from 'vue'
   import DashboardChart from './DashboardChart.vue'
 
-  const props = defineProps({
-    live: { type: Boolean, required: true },
-    telemetry: { type: Object, default: () => ({}) },
+  const props = withDefaults(defineProps<{
+    live: boolean
+    telemetry?: TelemetrySnapshot | null
+  }>(), {
+    telemetry: null,
   })
   const { live, telemetry } = toRefs(props)
 
-  const t = computed(() => telemetry.value || {})
+  const t = computed(() => (telemetry.value || {}) as Partial<TelemetrySnapshot>)
   const speed = computed(() => Math.round(t.value.speed_kmh || 0))
   const rpm = computed(() => Math.round(t.value.rpm || 0))
   const rpmMax = computed(() => Math.round(t.value.rpm_max || 8000))
@@ -40,7 +43,7 @@
     return g || '-'
   })
 
-  const getLedColor = (index, pct) => {
+  const getLedColor = (index: number, pct: number) => {
     const totalLeds = 20
     const threshold = index / totalLeds
 
@@ -188,7 +191,7 @@
                 </div>
                 <div
                   class="bg-accent-2/20 absolute bottom-0 left-0 w-full transition-all duration-75"
-                  :style="{ height: `${(t.turbo_bar / 2.0) * 100}%` }"
+                  :style="{ height: `${((t.turbo_bar ?? 0) / 2.0) * 100}%` }"
                 ></div>
               </div>
             </div>
