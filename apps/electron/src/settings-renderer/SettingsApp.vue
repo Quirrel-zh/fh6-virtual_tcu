@@ -34,7 +34,7 @@
     NTag,
   } from 'naive-ui'
   import { provide } from 'vue'
-  import { useSettingsApp } from './SettingsApp'
+  import { brandIconUrl, useSettingsApp } from './SettingsApp'
 
   const ctx = useSettingsApp()
   provide(settingsContextKey, ctx as any)
@@ -77,7 +77,7 @@
       <NLayoutHeader bordered style="padding: 12px 20px">
         <NFlex justify="space-between" align="center">
           <NFlex align="center" :size="16">
-            <div class="brand-mark">TCU</div>
+            <img class="brand-mark" :src="brandIconUrl" :alt="t('app.title')" />
             <div>
               <div style="font-size: 15px; font-weight: 600">
                 {{ t('app.title') }}
@@ -203,15 +203,11 @@
     width: 36px;
     height: 36px;
     border-radius: 8px;
-    background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.16))
+      drop-shadow(0 2px 8px rgba(15, 23, 42, 0.1));
   }
 
   kbd {

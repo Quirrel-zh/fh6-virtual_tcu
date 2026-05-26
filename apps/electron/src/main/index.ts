@@ -288,10 +288,10 @@ function createHudWindow() {
 // ----- Tray ------------------------------------------------------------------
 
 function createTray() {
-  // Using an empty image keeps things working without bundling an icon yet.
-  // Replace with `nativeImage.createFromPath(join(__dirname, '..', 'icon.png'))`
-  // when you ship one.
-  const icon = nativeImage.createEmpty()
+  const iconPath = app.isPackaged
+    ? join(process.resourcesPath, 'icon.ico')
+    : join(__dirname, '..', '..', 'build', 'icon.ico')
+  const icon = nativeImage.createFromPath(iconPath)
   tray = new Tray(icon)
   tray.setToolTip('Virtual TCU')
 

@@ -13,9 +13,13 @@ import { setAppLocale } from '@virtual-tcu/shared/i18n'
 import { formatDuration, sliderUnit } from '@virtual-tcu/shared/utils/format'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+// Replace `./assets/brand-icon.svg` with your PNG/SVG and update the import path if needed.
+import brandIconUrl from './assets/brand-icon.png'
+
 import { useUpdater } from './useUpdater'
 
 export const GITHUB_REPO_URL = 'https://github.com/Forza-Love/fh6-virtual_tcu'
+export { brandIconUrl }
 
 export type SettingsTabKey = 'overview' | 'config' | 'advanced' | 'stats' | 'history' | 'about'
 

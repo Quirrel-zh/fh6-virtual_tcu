@@ -17,6 +17,8 @@ extraResources:
     to: backend
     filter:
       - '**/*'
+  - from: build/icon.ico
+    to: icon.ico
 
 asar: true
 asarUnpack: []
