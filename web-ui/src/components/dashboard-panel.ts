@@ -1,1 +1,1 @@
-export { useDashboardPanel } from '@virtual-tcu/ui/dashboard'
+export { getLedColor, useDashboardPanel } from '@virtual-tcu/ui/dashboard'

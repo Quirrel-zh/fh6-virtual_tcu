@@ -5,7 +5,7 @@ import type {
 } from '@virtual-tcu/shared/types/telemetry'
 import type { ConfigMap } from '@virtual-tcu/shared/types/ws'
 import { SETTING_SLIDERS } from '@virtual-tcu/shared/config/settings'
-import { formatDuration } from '@virtual-tcu/shared/utils/format'
+import { formatDuration, sliderUnit } from '@virtual-tcu/shared/utils/format'
 import { computed, ref } from 'vue'
 
 export const TAB_IDS = ['settings', 'stats', 'history', 'extras'] as const
@@ -95,3 +95,5 @@ export function useSettingsPanel(
     sliderDef,
   }
 }
+
+export { sliderUnit }

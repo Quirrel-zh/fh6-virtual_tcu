@@ -12,7 +12,7 @@
   } from '@/config/settings'
   import { useNetworkSettings } from './network-settings'
 
-  import { TAB_IDS, useConfirmReset, useSettingsPanel } from './settings-panel'
+  import { sliderUnit, TAB_IDS, useConfirmReset, useSettingsPanel } from './settings-panel'
 
   const props = withDefaults(
     defineProps<{
@@ -81,13 +81,6 @@
   function applyNetworkSettings() {
     const parsed = validateNetwork()
     if (parsed) emit('applyNetwork', parsed.host, parsed.webPort, parsed.udpPort)
-  }
-
-  function sliderUnit(s: { unit?: string }) {
-    if (!s.unit || s.unit === 'raw') return ''
-    if (s.unit === 'percent') return '%'
-    if (s.unit === 'rpm') return ' rpm'
-    return ` ${s.unit}`
   }
 
   const { confirmReset } = useConfirmReset(() => emit('resetConfig'))

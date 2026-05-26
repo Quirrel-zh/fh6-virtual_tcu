@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 export {
   CONFIG_TAB_IDS,
   hotkeyInputValue,
+  sliderUnit,
   TAB_IDS,
   useSettingsPanel,
 } from '@virtual-tcu/ui/dashboard'
