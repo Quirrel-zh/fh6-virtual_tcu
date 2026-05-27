@@ -41,6 +41,7 @@ export function useTcuStore() {
   const watchdogStuck = ref(false)
   const webUrls = ref<WebUrls | null>(null)
   const webBindStatus = ref<{ ok: boolean; error?: string } | null>(null)
+  const effectiveOutputMode = ref<'keyboard' | 'gamepad' | null>(null)
 
   const modal = reactive({
     open: false,
@@ -63,6 +64,7 @@ export function useTcuStore() {
         packetsTotal.value = msg.data.packets_total
         logStatus.value = msg.data.log_status
         webUrls.value = msg.data.web_urls ?? null
+        effectiveOutputMode.value = msg.data.effective_output_mode ?? null
         connected.value = true
         break
       case 'telemetry':
@@ -141,7 +143,7 @@ export function useTcuStore() {
     send({ type: 'reset_config' })
   }
 
-  function checkGamepad(timeoutMs = 3000): Promise<{ ok: boolean; error: string }> {
+  function checkGamepad(timeoutMs = 8000): Promise<{ ok: boolean; error: string }> {
     // Clear any in-flight check
     if (gamepadCheckTimer) clearTimeout(gamepadCheckTimer)
     if (gamepadCheckResolve) {
@@ -260,6 +262,7 @@ export function useTcuStore() {
     watchdogStuck,
     webUrls,
     webBindStatus,
+    effectiveOutputMode,
     sessionStats,
     connectionLabel,
     modal,

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { VIGEMBUS_DRIVER_URL } from '@virtual-tcu/shared/config/links'
   import {
     NAlert,
     NButton,
@@ -64,10 +65,17 @@
     })),
   )
 
-  const vigembusUrl = 'https://github.com/ViGEm/ViGEmBus/releases'
+  const vigembusUrl = VIGEMBUS_DRIVER_URL
 
   async function onOutputModeChange(v: string) {
     if (v === 'gamepad') {
+      // Backend is already driving shifts via a virtual gamepad — no probe needed.
+      if (store.effectiveOutputMode === 'gamepad') {
+        gamepadCheckError.value = ''
+        store.setConfig('output_mode', v)
+        return
+      }
+
       gamepadCheckError.value = ''
       gamepadChecking.value = true
       try {

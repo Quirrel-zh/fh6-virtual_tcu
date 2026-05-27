@@ -266,7 +266,7 @@ export default {
     saveAndRestart: '保存并重启后端',
     gamepadCheckFailed: '未检测到 ViGEmBus 驱动',
     gamepadCheckFailedHint:
-      '手柄输出需要 ViGEmBus 虚拟手柄驱动。请从 {url} 下载安装，重启 Windows 后再切换到手柄模式。',
+      '手柄输出需要 ViGEmBus 虚拟手柄驱动。请从 {url} 下载安装，安装后重启 Windows 再切换到手柄模式。若已安装驱动，请先点击「保存并重启后端」。',
     gamepadCheckTimeout: '手柄驱动检测超时 — 后端可能繁忙，请重试。',
     installDriver: '安装驱动',
     installDriverHint: '安装完成后需重启 Windows 才能使驱动生效。',

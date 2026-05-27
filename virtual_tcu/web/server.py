@@ -140,7 +140,10 @@ class WebServer:
             }
             await self._apply_network(msg)
         elif t == "check_gamepad":
-            ok, error = check_gamepad_available()
+            if isinstance(self._tcu._kb, GamepadOutput):
+                ok, error = True, ""
+            else:
+                ok, error = check_gamepad_available()
             await ws.send_json({"type": "gamepad_check", "ok": ok, "error": error})
         elif t == "reset_config":
             self._config.reset()
