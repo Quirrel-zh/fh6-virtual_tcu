@@ -1,14 +1,54 @@
-# Virtual TCU v13.1 — Forza Horizon 6
+# Virtual TCU — Forza Horizon 6
 
+<div align="center">
+
+[![Release](https://img.shields.io/github/v/release/Forza-Love/fh6-virtual_tcu?label=release&sort=semver)](https://github.com/Forza-Love/fh6-virtual_tcu/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/Forza-Love/fh6-virtual_tcu/ci.yml?branch=main&label=CI)](https://github.com/Forza-Love/fh6-virtual_tcu/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/Forza-Love/fh6-virtual_tcu)](LICENSE)
 [![Discord](https://img.shields.io/discord/1508360305712037988?label=Discord&color=5865F2)](https://discordapp.com/invite/ghj3PGe9)
+[![GitHub stars](https://img.shields.io/github/stars/Forza-Love/fh6-virtual_tcu?style=social)](https://github.com/Forza-Love/fh6-virtual_tcu/stargazers)
 
-**English | [简体中文](README.zh-CN.md)**
+<br>
+
+[![Windows](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D6?logo=windows&logoColor=white)](#quick-start)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](package.json)
+[![pnpm](https://img.shields.io/badge/pnpm-10.33-F69220?logo=pnpm&logoColor=white)](package.json)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.12-3776AB?logo=python&logoColor=white)](pyproject.toml)
+[![Vue](https://img.shields.io/badge/vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)](apps/dashboard/package.json)
+[![Electron](https://img.shields.io/badge/electron-42-47848F?logo=electron&logoColor=white)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](package.json)
+[![Ruff](https://img.shields.io/badge/Ruff-lint%20%2B%20format-D7FF64?logo=ruff&logoColor=black)](pyproject.toml)
+
+<br>
+
+[![FH6](https://img.shields.io/badge/game-Forza%20Horizon%206-E10600?logo=xbox&logoColor=white)](#forza-horizon-6--in-game-setup-one-time)
+[![i18n](https://img.shields.io/badge/i18n-en%20%7C%20zh--CN-22c55e)](apps/dashboard/)
+[![ViGEm](https://img.shields.io/badge/output-keyboard%20%7C%20gamepad-64748b)](#3-gamepad-mode-optional)
+
+**English · [简体中文](README.zh-CN.md)**
+
+</div>
 
 > This project's core functionality is provided by **Insightful**, maintained for the [**Forza Mods**](https://discord.gg/forzamods) Discord community.
 
 An external adaptive transmission controller for *Forza Horizon 6*. It reads real-time UDP telemetry from the game, decides when to shift based on driving style, throttle, RPM, speed, and brake input, and injects shift commands — **keyboard keys** (E/Q) or **virtual gamepad buttons** (B/X) via ViGEmBus.
 
 **v13** ships as a Windows tray app (Electron) with a floating HUD and auto-update. The live telemetry dashboard runs in your browser at **http://127.0.0.1:8765** (English / 简体中文). A portable Python-only build is still available for users who prefer no Electron.
+
+| | |
+| :-- | :-- |
+| 🚗 **5 drive modes** | Comfort · Dynamic · Race · Drift · Off-road |
+| 🧠 **Per-car learning** | Gear ratios, power curve, rev limiter, sport index |
+| 📡 **60 Hz TCU loop** | UDP telemetry in → shift logic → keyboard / gamepad out |
+| 🖥️ **Desktop shell** | Tray app, Settings window, floating HUD, browser dashboard |
+| 🔄 **One-click updates** | `electron-updater` ships Electron + Python backend together |
+
+```mermaid
+flowchart LR
+  FH6["Forza Horizon 6"] -->|"UDP :5555"| TCU["Virtual TCU\n(Python)"]
+  TCU -->|"E/Q or B/X"| FH6
+  TCU -->|"WS :8765"| UI["Dashboard / HUD\n(Vue + Electron)"]
+```
 
 ---
 
@@ -61,7 +101,7 @@ Left-click the tray icon also opens **Settings**.
 
 By default, the TCU injects keyboard keys (**E** upshift / **Q** downshift). If you prefer virtual controller buttons instead (no keyboard bindings needed), switch to gamepad mode in **Settings → Extras → Output mode**.
 
-Gamepad mode requires the **[ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases) driver** — a one-time system install:
+Gamepad mode requires the **[ViGEmBus](https://github.com/Forza-Love/fh6-virtual_tcu/raw/main/driver/ViGEmBusSetup_x64.msi) driver** — a one-time system install:
 
 1. Download `ViGEmBus_Setup_*.exe` from the link above.
 2. Run as Administrator → accept the UAC prompt → install.
@@ -435,7 +475,7 @@ virtualTCU/
 
 ### Gamepad mode not working
 
-- Install the **[ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases) driver** → reboot Windows.
+- Install the **[ViGEmBus](https://github.com/Forza-Love/fh6-virtual_tcu/raw/main/driver/ViGEmBusSetup_x64.msi) driver** → reboot Windows.
 - If you already installed it, make sure you rebooted after installation.
 - Switch output mode to **Keyboard** in Settings → Extras if you don't want to install the driver.
 - The TCU automatically falls back to keyboard mode if the driver is missing.
