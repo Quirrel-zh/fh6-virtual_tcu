@@ -39,6 +39,27 @@ def _build_button_map() -> dict[str, int]:
     }
 
 
+def check_gamepad_available() -> tuple[bool, str]:
+    """Probe whether the ViGEmBus driver is installed and functional.
+
+    Creates a temporary virtual gamepad and immediately destroys it.
+    Returns ``(True, "")`` on success or ``(False, reason)`` on failure.
+    This is safe to call at any time — it does not affect the active
+    ``GamepadOutput`` instance.
+    """
+    try:
+        import vgamepad as vg
+    except ImportError:
+        return False, "vgamepad package not installed — run: pip install vgamepad"
+    try:
+        gp = vg.VX360Gamepad()
+        gp.reset()
+        gp.update()
+    except Exception as e:
+        return False, f"ViGEmBus driver not found — {e}"
+    return True, ""
+
+
 class GamepadOutput(OutputInterface):
     """Inject shift commands as virtual Xbox 360 controller button presses.
 

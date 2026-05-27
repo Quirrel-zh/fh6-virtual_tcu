@@ -15,6 +15,7 @@ from virtual_tcu.config.web_bind import (
     resolve_bind,
 )
 from virtual_tcu.deps import WSMsgType, web
+from virtual_tcu.input.gamepad_output import GamepadOutput, check_gamepad_available
 from virtual_tcu.logic.tcu import TCULogic
 from virtual_tcu.telemetry.logger import TelemetryLogger
 from virtual_tcu.telemetry.receiver import TelemetryReceiver
@@ -89,6 +90,9 @@ class WebServer:
                         "defaults": DEFAULTS,
                         "log_status": self._logger.status,
                         "web_urls": network_status(self._config),
+                        "effective_output_mode": (
+                            "gamepad" if isinstance(self._tcu._kb, GamepadOutput) else "keyboard"
+                        ),
                     },
                 }
             )
@@ -135,6 +139,9 @@ class WebServer:
                 "udp_port": self._config.get("udp_port", 5555),
             }
             await self._apply_network(msg)
+        elif t == "check_gamepad":
+            ok, error = check_gamepad_available()
+            await ws.send_json({"type": "gamepad_check", "ok": ok, "error": error})
         elif t == "reset_config":
             self._config.reset()
             self._tcu.refresh_shift_keys()

@@ -251,6 +251,15 @@ export function useSettingsApp() {
     restartBackend,
     toggleHud,
     openGithub,
+    checkGamepad: store.checkGamepad,
+    installViGEmBus: () => {
+      const api = (
+        window as unknown as {
+          tcu?: { installViGEmBus?: () => Promise<{ ok: boolean; error?: string }> }
+        }
+      ).tcu
+      api?.installViGEmBus?.()
+    },
     updater,
     store,
   }

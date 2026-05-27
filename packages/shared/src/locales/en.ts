@@ -268,6 +268,13 @@ export default {
     gamepadShiftUp: 'Upshift button',
     gamepadShiftDown: 'Downshift button',
     saveAndRestart: 'Save & Restart Backend',
+    gamepadCheckFailed: 'ViGEmBus driver not found',
+    gamepadCheckFailedHint:
+      'Gamepad output requires the ViGEmBus virtual controller driver. Download it from {url}, install, and reboot Windows before switching to gamepad mode.',
+    gamepadCheckTimeout: 'Gamepad driver check timed out — backend may be busy. Try again.',
+    installDriver: 'Install Driver',
+    installDriverHint:
+      'After installation completes, reboot Windows for the driver to take effect.',
     cycleMode: 'Cycle mode',
     toggleLog: 'Toggle log',
     fullTuning: 'Drive modes — full tuning',

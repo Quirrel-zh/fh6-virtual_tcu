@@ -494,6 +494,26 @@ function registerIpc() {
   })
 
   ipcMain.handle('app:get-version', () => app.getVersion())
+
+  ipcMain.handle('app:install-vigembus', async () => {
+    const msiName = 'ViGEmBusSetup_x64.msi'
+    const msiPath = app.isPackaged
+      ? join(process.resourcesPath, 'driver', msiName)
+      : join(__dirname, '..', '..', '..', '..', 'driver', msiName)
+
+    if (!existsSync(msiPath)) {
+      console.error(`[install-vigembus] MSI not found at: ${msiPath}`)
+      return { ok: false, error: `Installer not found: ${msiPath}` }
+    }
+
+    console.log(`[install-vigembus] launching: ${msiPath}`)
+    const error = await shell.openPath(msiPath)
+    if (error) {
+      console.error(`[install-vigembus] failed: ${error}`)
+      return { ok: false, error }
+    }
+    return { ok: true }
+  })
 }
 
 // ----- Auto-update -----------------------------------------------------------

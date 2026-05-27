@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import {
+    NAlert,
     NButton,
     NCard,
     NFlex,
@@ -10,7 +11,7 @@
     NSlider,
     NText,
   } from 'naive-ui'
-  import { computed, inject } from 'vue'
+  import { computed, inject, ref } from 'vue'
   import { settingsContextKey } from './context'
 
   const ctx = inject(settingsContextKey)!
@@ -39,6 +40,13 @@
     sliderUnit,
   } = ctx
 
+  const gamepadCheckError = ref('')
+  const gamepadChecking = ref(false)
+
+  function onInstallDriver() {
+    store.installViGEmBus()
+  }
+
   function applyAndRestart() {
     applyNetworkSettings()
     restartBackend()
@@ -55,6 +63,33 @@
       value: o.value,
     })),
   )
+
+  const vigembusUrl = 'https://github.com/ViGEm/ViGEmBus/releases'
+
+  async function onOutputModeChange(v: string) {
+    if (v === 'gamepad') {
+      gamepadCheckError.value = ''
+      gamepadChecking.value = true
+      try {
+        const result = await store.checkGamepad()
+        if (!result.ok) {
+          gamepadCheckError.value =
+            result.error === 'timeout'
+              ? t('extras.gamepadCheckTimeout')
+              : t('extras.gamepadCheckFailed')
+          return
+        }
+      } catch {
+        gamepadCheckError.value = t('extras.gamepadCheckTimeout')
+        return
+      } finally {
+        gamepadChecking.value = false
+      }
+    }
+    // Driver OK or switching to keyboard — save config
+    gamepadCheckError.value = ''
+    store.setConfig('output_mode', v)
+  }
 </script>
 
 <template>
@@ -153,10 +188,28 @@
       <NSelect
         :value="outputModeValue"
         :options="outputModeOptionsComputed"
+        :loading="gamepadChecking"
         size="small"
         style="width: 200px"
-        @update:value="(v: string) => store.setConfig('output_mode', v)"
+        @update:value="onOutputModeChange"
       />
+      <NAlert
+        v-if="gamepadCheckError"
+        type="error"
+        :title="gamepadCheckError"
+        style="margin-top: 10px"
+      >
+        <template #default>
+          <NFlex vertical :size="8">
+            <NText depth="3" style="font-size: 12px">
+              {{ t('extras.gamepadCheckFailedHint', { url: vigembusUrl }) }}
+            </NText>
+            <NButton type="primary" size="small" @click="onInstallDriver">
+              {{ t('extras.installDriver') }}
+            </NButton>
+          </NFlex>
+        </template>
+      </NAlert>
       <template v-if="outputModeValue === 'gamepad'">
         <NText depth="3" style="font-size: 12px; display: block; margin: 12px 0 8px">
           {{ t('extras.gamepadButtonHint') }}
