@@ -15,4 +15,5 @@ python build/make-icon.py path/to/source.png
 Or use an online converter / GIMP / Photoshop and export as Windows ICO.
 
 Optional: `installerIcon.ico` (NSIS wizard), `background.png` (NSIS sidebar).
+`installer.nsh` — custom uninstall hooks (force-kill processes, retry directory removal).
 Then set `icon:` in `../electron-builder.yml` (already enabled).

@@ -15,7 +15,7 @@
 
 import type { ChildProcess } from 'node:child_process'
 import type { BackendEndpoints } from './backend-config'
-import { exec, spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { PassThrough } from 'node:stream'
@@ -173,6 +173,32 @@ function startBackend(): Promise<void> {
   })
 }
 
+function killBackendProcessSync(pid: number): void {
+  if (process.platform === 'win32') {
+    // /T = tree kill (children included), /F = force
+    spawnSync('taskkill', ['/F', '/T', '/PID', String(pid)], { windowsHide: true })
+  } else {
+    // Negative pid kills the entire process group on POSIX.
+    try {
+      process.kill(-pid, 'SIGKILL')
+    } catch {
+      try {
+        process.kill(pid, 'SIGKILL')
+      } catch {
+        // Process already dead — expected.
+      }
+    }
+  }
+}
+
+function forceStopBackendSync(): void {
+  const pid = backendPid
+  backend = null
+  backendPid = null
+  backendReady = false
+  if (pid != null) killBackendProcessSync(pid)
+}
+
 function stopBackend(): Promise<void> {
   return new Promise((resolve) => {
     const proc = backend
@@ -199,37 +225,29 @@ function stopBackend(): Promise<void> {
       clearTimeout(forceTimeout)
       resolve()
     }
-
-    proc.once('exit', done)
     forceTimeout = setTimeout(() => {
       console.warn(`[backend] exit event did not fire for pid ${pid} — resolving anyway`)
       done()
     }, 5_000)
 
-    if (process.platform === 'win32') {
-      // /T = tree kill (children included), /F = force
-      exec(`taskkill /F /T /PID ${pid}`, (err) => {
-        if (err) {
-          // taskkill returns non-zero if the process is already gone — that's fine.
-          console.warn(`[backend] taskkill pid ${pid}: ${err.message}`)
-        }
-      })
-    } else {
-      // Negative pid kills the entire process group on POSIX.
-      // NOTE: full POSIX support would also require `detached: true` in
-      // spawn() options so the child is a process-group leader.  As a
-      // defence-in-depth fallback we also try a direct kill.
-      try {
-        process.kill(-pid, 'SIGKILL')
-      } catch {
-        try {
-          process.kill(pid, 'SIGKILL')
-        } catch {
-          // Process already dead — expected.
-        }
-      }
-    }
+    proc.once('exit', done)
+    killBackendProcessSync(pid)
   })
+}
+
+function prepareForQuit(): void {
+  isQuitting = true
+  tray?.destroy()
+  tray = null
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.removeAllListeners('close')
+    settingsWindow.destroy()
+    settingsWindow = null
+  }
+  if (hudWindow && !hudWindow.isDestroyed()) {
+    hudWindow.destroy()
+    hudWindow = null
+  }
 }
 
 // ----- Windows ---------------------------------------------------------------
@@ -595,13 +613,10 @@ if (!gotLock) {
 app.on('before-quit', (e) => {
   if (!isBackendKilled) {
     e.preventDefault()
-    isQuitting = true
-    tray?.destroy()
-    tray = null
-    stopBackend().finally(() => {
-      isBackendKilled = true
-      app.quit()
-    })
+    prepareForQuit()
+    forceStopBackendSync()
+    isBackendKilled = true
+    app.quit()
   }
 })
 

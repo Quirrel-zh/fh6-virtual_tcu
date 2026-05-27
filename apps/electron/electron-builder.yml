@@ -34,7 +34,10 @@ win:
     - target: zip
       arch: x64
   artifactName: ${productName}-${version}-win64.${ext}
-  requestedExecutionLevel: requireAdministrator
+  # highestAvailable: run elevated when the user launched as admin (keyboard
+  # injection), otherwise asInvoker so the NSIS uninstaller can terminate the
+  # process without an elevation mismatch.
+  requestedExecutionLevel: highestAvailable
   icon: build/icon.ico
 
 nsis:
@@ -46,6 +49,7 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: VirtualTCU
+  include: build/installer.nsh
 
 publish:
   - provider: github
