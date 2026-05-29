@@ -2,6 +2,10 @@
 
 import sys
 
+from virtual_tcu.console import configure_stdio_utf8
+
+configure_stdio_utf8()
+
 try:
     import winsound
 
@@ -24,7 +28,7 @@ try:
     AIOHTTP_OK = True
 except ImportError:
     AIOHTTP_OK = False
-    print("[WARN] aiohttp missing — web UI disabled. Run: pip install aiohttp")
+    print("[WARN] aiohttp missing - web UI disabled. Run: pip install aiohttp")
     web = None
     WSMsgType = None
 

@@ -10,6 +10,7 @@ from virtual_tcu import paths
 from virtual_tcu.config.constants import Cfg
 from virtual_tcu.config.store import ConfigStore
 from virtual_tcu.config.web_bind import format_startup_urls, web_urls
+from virtual_tcu.console import configure_stdio_utf8
 from virtual_tcu.deps import AIOHTTP_OK
 from virtual_tcu.input import KeyboardOutput
 from virtual_tcu.input.gamepad_output import GamepadOutput
@@ -112,11 +113,12 @@ def banner():
     from virtual_tcu import __version__
 
     print("=" * 66)
-    print(f"  VIRTUAL TCU v{__version__}  —  FH6")
+    print(f"  VIRTUAL TCU v{__version__}  -  FH6")
     print("=" * 66)
 
 
 def main():
+    configure_stdio_utf8()
     if sys.platform != "win32":
         print("[ERROR] Windows only.")
         sys.exit(1)

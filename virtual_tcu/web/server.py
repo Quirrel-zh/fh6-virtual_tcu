@@ -335,11 +335,11 @@ class WebServer:
         except OSError as e:
             if host == "127.0.0.1":
                 raise
-            print(f"  [!] Web UI bind failed on {host}:{port} — {bind_error_hint(e)}")
+            print(f"  [!] Web UI bind failed on {host}:{port} - {bind_error_hint(e)}")
             print(f"  [.] Falling back to 127.0.0.1:{port}")
             await self._start_site("127.0.0.1", port)
             self._config.set_web_bind("127.0.0.1", port)
-            print("  [!] LAN access disabled — fix the issue above, then set 0.0.0.0 again")
+            print("  [!] LAN access disabled - fix the issue above, then set 0.0.0.0 again")
             return "127.0.0.1", port
 
     async def restart_listener(self) -> bool:
@@ -361,14 +361,14 @@ class WebServer:
             print(f"  [OK] Web UI rebound at {urls[0]}" + (f", {urls[1]}" if len(urls) > 1 else ""))
             return True
         except OSError as e:
-            print(f"  [!] Web UI rebind failed on {host}:{port} — {bind_error_hint(e)}")
+            print(f"  [!] Web UI rebind failed on {host}:{port} - {bind_error_hint(e)}")
             self._config.set_web_bind(old_host, old_port)
             try:
                 self._bind_host, self._bind_port = old_host, old_port
                 await self._start_site(old_host, old_port)
                 print(f"  [OK] Web UI restored at {old_host}:{old_port}")
             except OSError as e2:
-                print(f"  [!!] Web UI restore failed — {e2}")
+                print(f"  [!!] Web UI restore failed - {e2}")
             return False
 
     async def _start_site(self, host: str, port: int):
@@ -387,7 +387,7 @@ class WebServer:
             await self._runner.cleanup()
             self._runner = None
             self._site = None
-            raise OSError(f"Web UI bind failed on {host}:{port} — {bind_error_hint(e)}") from e
+            raise OSError(f"Web UI bind failed on {host}:{port} - {bind_error_hint(e)}") from e
 
     async def start(self):
         host, port = resolve_bind(self._config)

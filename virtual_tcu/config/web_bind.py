@@ -82,9 +82,9 @@ def bind_error_hint(exc: OSError) -> str:
     winerr = getattr(exc, "winerror", None)
     if exc.errno in (98, 10048) or winerr in (10048, 10013):
         return (
-            "port already in use — quit other Virtual TCU instances "
+            "port already in use - quit other Virtual TCU instances "
             "or choose another port in settings"
         )
     if winerr == 10013:
-        return "access denied — try 127.0.0.1 or run as Administrator"
+        return "access denied - try 127.0.0.1 or run as Administrator"
     return str(exc)

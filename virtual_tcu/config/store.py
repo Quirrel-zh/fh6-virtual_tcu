@@ -56,7 +56,7 @@ class ConfigStore:
                 new_keys_added = True
             if new_keys_added:
                 self.save()
-                print("[Config] new settings added — file updated")
+                print("[Config] new settings added - file updated")
         except Exception as e:
             print(f"[Config] load failed, using defaults: {e}")
             try:

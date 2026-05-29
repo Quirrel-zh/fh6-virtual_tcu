@@ -5,6 +5,9 @@ import sys
 
 
 def _run() -> None:
+    from virtual_tcu.console import configure_stdio_utf8
+
+    configure_stdio_utf8()
     from virtual_tcu.app import main
 
     main()

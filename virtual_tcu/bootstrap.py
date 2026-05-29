@@ -38,6 +38,9 @@ def pause_before_exit(code: int = 1) -> None:
 
 
 def report_fatal(message: str, *, exc: BaseException | None = None) -> None:
+    from virtual_tcu.console import configure_stdio_utf8
+
+    configure_stdio_utf8()
     print(f"\n[ERROR] {message}")
     if exc is not None:
         print()

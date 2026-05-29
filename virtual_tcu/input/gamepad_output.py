@@ -111,7 +111,7 @@ class GamepadOutput(OutputInterface):
             self._gamepad = vg.VX360Gamepad()
         except Exception as e:
             raise RuntimeError(
-                "ViGEmBus driver not found — gamepad output unavailable.\n"
+                "ViGEmBus driver not found - gamepad output unavailable.\n"
                 f"  Download the installer: {self.VIGEMBUS_URL}\n"
                 "  After installing, reboot Windows, then restart Virtual TCU.\n"
                 f"  (Original error: {e})"
@@ -169,7 +169,7 @@ class GamepadOutput(OutputInterface):
         """Press *name*, hold BUTTON_HOLD_S, release, and update the device."""
         btn = _BUTTON_MAP.get(name.upper())
         if btn is None:
-            print(f"[Gamepad] unknown button '{name}' — check config")
+            print(f"[Gamepad] unknown button '{name}' - check config")
             return
         try:
             self._gamepad.press_button(button=btn)
