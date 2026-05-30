@@ -39,19 +39,23 @@ class KeyboardOutput(OutputInterface):
         except Exception as e:
             print(f"[KB] Input simulation failed: {e}")
 
-    def shift_up(self):
-        self._executor.submit(self._press_release, self.key_up)
+    def shift_to(self, from_gear: int, target_gear: int):
+        # from_gear and target_gear must be 0-10
+        if not (0 <= from_gear <= 10) or not (0 <= target_gear <= 10):
+            print(f"[Keyboard] invalid gear numbers: from {from_gear} to {target_gear}")
+            return
+        if from_gear == target_gear:
+            return
 
-    def shift_down(self):
-        self._executor.submit(self._press_release, self.key_down)
+        shifts_needed = abs(target_gear - from_gear)
 
-    def shift_down_double(self):
-        def _double():
-            self._press_release(self.key_down)
-            time.sleep(0.06)
-            self._press_release(self.key_down)
+        def _multi_shift():
+            for i in range(shifts_needed):
+                self._press_release(self.key_up if target_gear > from_gear else self.key_down)
+                if i < shifts_needed - 1:
+                    time.sleep(0.06)
 
-        self._executor.submit(_double)
+        self._executor.submit(_multi_shift)
 
     def shutdown(self):
         self._executor.shutdown(wait=False)

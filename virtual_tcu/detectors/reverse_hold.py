@@ -25,7 +25,7 @@ class ReverseHoldDetector:
             if self._down_pressed_since is None:
                 self._down_pressed_since = now
             elif (now - self._down_pressed_since) * 1000 >= Cfg.REVERSE_HOLD_MS:
-                self._kb.shift_down()
+                self._kb.shift_to(1, 0)
                 self._down_pressed_since = None
                 self._down_armed = False
                 return "ENGAGED_REVERSE"
@@ -36,7 +36,7 @@ class ReverseHoldDetector:
             if self._up_pressed_since is None:
                 self._up_pressed_since = now
             elif (now - self._up_pressed_since) * 1000 >= Cfg.REVERSE_EXIT_MS:
-                self._kb.shift_up()
+                self._kb.shift_to(0, 1)
                 self._up_pressed_since = None
                 self._up_armed = False
                 return "EXITED_REVERSE"

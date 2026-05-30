@@ -16,6 +16,7 @@ from virtual_tcu.config.web_bind import (
 )
 from virtual_tcu.deps import WSMsgType, web
 from virtual_tcu.input.gamepad_output import GamepadOutput, check_gamepad_available
+from virtual_tcu.input.vjoy_output import VJoyOutput
 from virtual_tcu.logic.tcu import TCULogic
 from virtual_tcu.telemetry.logger import TelemetryLogger
 from virtual_tcu.telemetry.receiver import TelemetryReceiver
@@ -91,7 +92,11 @@ class WebServer:
                         "log_status": self._logger.status,
                         "web_urls": network_status(self._config),
                         "effective_output_mode": (
-                            "gamepad" if isinstance(self._tcu._kb, GamepadOutput) else "keyboard"
+                            "gamepad"
+                            if isinstance(self._tcu._kb, GamepadOutput)
+                            else "vjoy"
+                            if isinstance(self._tcu._kb, VJoyOutput)
+                            else "keyboard"
                         ),
                     },
                 }

@@ -77,6 +77,14 @@ hiddenimports = (
         "virtual_tcu.state.shift_history",
         "keyboard",
         "vgamepad",
+        # Listed by name (not collect_submodules) so the build does not import
+        # pyvjoy — importing pyvjoy._sdk loads vJoyInterface.dll, which is absent
+        # on CI. The DLL ships with the user's vJoy driver install, not with us.
+        "pyvjoy",
+        "pyvjoy.vjoydevice",
+        "pyvjoy._sdk",
+        "pyvjoy.constants",
+        "pyvjoy.exceptions",
     ]
 )
 

@@ -582,7 +582,7 @@ class TCULogic:
             self._no_downshift_until = max(self._no_downshift_until, now + downshift_lock_s)
         self._we_shifted = True
         self._shift_count += 1
-        self._kb.shift_up()
+        self._kb.shift_to(td.gear, td.gear + 1)
         self._logger.mark_event()
         self._shift_history.record("UP", td, reason=state, rule=self.mode.value)
         self._session_stats.record_shift("UP", state)
@@ -632,7 +632,7 @@ class TCULogic:
         self._we_shifted = True
         self._shift_count += 1
         self._last_downshift_time = now
-        self._kb.shift_down()
+        self._kb.shift_to(td.gear, td.gear - 1)
         self._logger.mark_event()
         self._shift_history.record("DOWN", td, reason=state, rule=self.mode.value)
         self._session_stats.record_shift("DOWN", state)
@@ -661,7 +661,7 @@ class TCULogic:
         self._we_shifted = True
         self._shift_count += 2
         self._last_downshift_time = now
-        self._kb.shift_down_double()
+        self._kb.shift_to(td.gear, target)
         self._logger.mark_event()
         self._shift_history.record("DOWN", td, reason="SKIP DOWN", rule=self.mode.value)
         self._session_stats.record_shift("DOWN", "BRAKE DOWN")

@@ -33,18 +33,8 @@ class OutputInterface(ABC):
         ...
 
     @abstractmethod
-    def shift_up(self):
-        """Trigger an upshift (non-blocking — must return quickly)."""
-        ...
-
-    @abstractmethod
-    def shift_down(self):
-        """Trigger a downshift (non-blocking)."""
-        ...
-
-    @abstractmethod
-    def shift_down_double(self):
-        """Trigger a double downshift (skip-shift, non-blocking)."""
+    def shift_to(self, from_gear: int, target_gear: int):
+        """Trigger a shift to the specified gear (non-blocking)."""
         ...
 
     @abstractmethod
