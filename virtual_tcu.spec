@@ -61,15 +61,6 @@ if not _vg_dll_datas:
         f"Missing ViGEmClient.dll under {_vg_client} — reinstall vgamepad before building"
     )
 
-# Bundle the vendored vJoy interface DLL alongside the pyvjoy package so the
-# frozen build can load it (pyvjoy._sdk falls back to <pkg dir>/vJoyInterface.dll).
-_vjoy_dll = project_root / "pyvjoy" / "vJoyInterface.dll"
-if not _vjoy_dll.is_file():
-    raise SystemExit(
-        f"Missing {_vjoy_dll} — download vJoyInterface.dll (x64) into pyvjoy/ before building"
-    )
-_vjoy_dll_datas = [(str(_vjoy_dll), "pyvjoy")]
-
 hiddenimports = (
     list(_kb_hidden)
     + list(_aio_hidden)
@@ -79,7 +70,6 @@ hiddenimports = (
     + collect_submodules("frozenlist")
     + collect_submodules("aiosignal")
     + collect_submodules("virtual_tcu")
-    + collect_submodules("pyvjoy")
     + [
         "virtual_tcu.bootstrap",
         "virtual_tcu.paths",
@@ -87,6 +77,14 @@ hiddenimports = (
         "virtual_tcu.state.shift_history",
         "keyboard",
         "vgamepad",
+        # Listed by name (not collect_submodules) so the build does not import
+        # pyvjoy — importing pyvjoy._sdk loads vJoyInterface.dll, which is absent
+        # on CI. The DLL ships with the user's vJoy driver install, not with us.
+        "pyvjoy",
+        "pyvjoy.vjoydevice",
+        "pyvjoy._sdk",
+        "pyvjoy.constants",
+        "pyvjoy.exceptions",
     ]
 )
 
@@ -97,8 +95,7 @@ a = Analysis(
     datas=[(str(dist_data), "virtual_tcu/web/dist")]
     + _kb_datas
     + _aio_datas
-    + _vg_dll_datas
-    + _vjoy_dll_datas,
+    + _vg_dll_datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
