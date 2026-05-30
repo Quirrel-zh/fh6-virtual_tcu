@@ -20,6 +20,7 @@
     "lint:py": "ruff check virtual_tcu virtual_tcu.py",
     "format": "prettier --write . && ruff format virtual_tcu virtual_tcu.py",
     "format:py": "ruff format virtual_tcu virtual_tcu.py",
+    "test:py": "pytest",
     "prepare": "husky && node scripts/sync-version.mjs"
   },
   "devDependencies": {
