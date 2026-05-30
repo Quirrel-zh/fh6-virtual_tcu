@@ -152,9 +152,9 @@ class GamepadOutput(OutputInterface):
         shifts_needed = abs(target_gear - from_gear)
 
         def _multi_shift():
-            for round in range(shifts_needed):
+            for i in range(shifts_needed):
                 self._press_release(self.key_up if target_gear > from_gear else self.key_down)
-                if round < shifts_needed - 1:
+                if i < shifts_needed - 1:
                     time.sleep(0.06)
 
         self._executor.submit(_multi_shift)

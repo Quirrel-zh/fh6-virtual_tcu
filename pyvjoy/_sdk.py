@@ -112,8 +112,7 @@ def SetDiscPov(PovValue, rID, PovID):
         raise vJoyInvalidPovValueException()
 
     if PovID < 1 or PovID > 4:
-        raise vJoyInvalidPovIDException
-
+        raise vJoyInvalidPovIDException()
     return _vj.SetDiscPov(PovValue, rID, PovID)
 
 
@@ -123,8 +122,7 @@ def SetContPov(PovValue, rID, PovID):
         raise vJoyInvalidPovValueException()
 
     if PovID < 1 or PovID > 4:
-        raise vJoyInvalidPovIDException
-
+        raise vJoyInvalidPovIDException()
     return _vj.SetContPov(PovValue, rID, PovID)
 
 
