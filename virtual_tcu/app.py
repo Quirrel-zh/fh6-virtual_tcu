@@ -163,6 +163,13 @@ def main():
             print("  [!!] VJOY MODE UNAVAILABLE")
             print(f"  {e}")
             print("  The vJoy driver is not installed.")
+            print("  After installing and rebooting, vJoy mode will activate")
+            print("  automatically (output_mode is already set to 'vjoy').")
+            print("-" * 66)
+            kb = KeyboardOutput(config)
+            # Do NOT overwrite output_mode — the user explicitly chose vjoy.
+            # Their preference is preserved so it takes effect once the driver
+            # is installed and the backend is restarted.
     else:
         kb = KeyboardOutput(config)
 

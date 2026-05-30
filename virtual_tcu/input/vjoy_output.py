@@ -1,8 +1,6 @@
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from pyvjoy import VJoyDevice
-
 from virtual_tcu.config.store import ConfigStore
 from virtual_tcu.input.interface import OutputInterface
 
@@ -37,6 +35,8 @@ class VJoyOutput(OutputInterface):
         if not _BUTTON_MAP:
             _BUTTON_MAP = _build_button_map()
         try:
+            from pyvjoy import VJoyDevice
+
             self._v_device = VJoyDevice(1)
         except Exception as e:
             raise RuntimeError(

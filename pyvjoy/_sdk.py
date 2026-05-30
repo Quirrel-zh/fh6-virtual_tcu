@@ -1,5 +1,4 @@
 import os
-import sys
 from ctypes import Structure, c_byte, c_long, cdll, pointer, wintypes
 
 from pyvjoy.constants import DLL_FILENAME, VJD_STAT_FREE
@@ -36,7 +35,7 @@ for p in dll_path:
             continue
 
 if not loaded:
-    sys.exit(f"Unable to load vJoy SDK DLL.  Ensure that {DLL_FILENAME} is present")
+    raise vJoyException(f"Unable to load vJoy SDK DLL.  Ensure that {DLL_FILENAME} is present")
 
 
 def vJoyEnabled():
